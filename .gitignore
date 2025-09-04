@@ -1,0 +1,20 @@
+.env
+node_modules
+.zed
+.DS_Store
+.python-version
+.idea
+__pycache__
+dist/
+applications/apache/data/
+applications/apache/snowflake/snowflake_router/dist/**
+raphtory-base-ui/lib/api/__generated/genql/**
+raphtory-base-ui/types/
+target
+pyrightconfig.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
