@@ -1,19 +1,41 @@
 {
-  "name": "pometry-ui-tests",
-  "version": "0.0.1",
-  "description": "",
-  "homepage": "https://github.com/Pometry/pometry-ui-tests",
-  "bugs": {
-    "url": "https://github.com/Pometry/pometry-ui-tests/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Pometry/pometry-ui-tests.git"
-  },
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  }
+    "name": "ui-tests",
+    "version": "0.0.1",
+    "description": "",
+    "homepage": "https://github.com/Pometry/ui-tests",
+    "bugs": {
+        "url": "https://github.com/Pometry/ui-tests/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Pometry/ui-tests.git"
+    },
+    "directories": {
+        "test": "tests"
+    },
+    "scripts": {
+        "format": "prettier --write .",
+        "format-check": "prettier --check .",
+        "eslint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
+        "eslint-check": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "preinstall": "npx only-allow pnpm",
+        "install-playwright": "pnpm exec playwright install",
+        "test": "pnpm exec playwright test",
+        "tsc": "tsc"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^6.14.0",
+        "@typescript-eslint/parser": "^6.14.0",
+        "@playwright/test": "^1.55.0",
+        "eslint": "^8.55.0",
+        "eslint-import-resolver-typescript": "^3.6.1",
+        "eslint-plugin-import": "^2.29.1",
+        "eslint-plugin-react": "^7.33.2",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "eslint-plugin-react-refresh": "^0.4.5",
+        "eslint-plugin-unused-imports": "^3.0.0",
+        "eslint-plugin-yml": "^1.12.2",
+        "prettier": "^3.2.5",
+        "typescript": "^5.2.2"
+    }
 }

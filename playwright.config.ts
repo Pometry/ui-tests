@@ -73,7 +73,7 @@ export default defineConfig({
     webServer: [
         {
             name: 'raphtory-gql',
-            command: 'cd applications/vanilla && python test_server.py',
+            command: 'cd ../applications/vanilla && python test_server.py',
             port: 1736,
             timeout: 120 * 1000,
             stdout: 'pipe',
@@ -81,7 +81,7 @@ export default defineConfig({
         },
         {
             name: 'vanilla-prod',
-            command: 'pnpm production-vanilla',
+            command: 'cd .. && pnpm production-vanilla',
             port: 3000,
             timeout: 120 * 1000,
         },
