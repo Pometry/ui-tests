@@ -1,0 +1,19 @@
+{
+  "name": "pometry-ui-tests",
+  "version": "0.0.1",
+  "description": "",
+  "homepage": "https://github.com/Pometry/pometry-ui-tests",
+  "bugs": {
+    "url": "https://github.com/Pometry/pometry-ui-tests/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pometry/pometry-ui-tests.git"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
