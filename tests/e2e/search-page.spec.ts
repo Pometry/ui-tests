@@ -2,6 +2,10 @@ import { expect, Page, test } from '@playwright/test';
 import { fillInCondition, searchForEntity } from './utils';
 
 async function searchAndPinNodes(page: Page, amount: number) {
+    if (amount <= 0) {
+        return;
+    }
+
     await searchForEntity(page, { type: 'node', nodeType: 'Person' });
     const table = page.getByRole('table');
     await expect(table).toBeVisible();
@@ -18,6 +22,15 @@ async function searchAndPinNodes(page: Page, amount: number) {
     const pinnedTab = page.getByRole('tab', { name: 'Pinned' });
     await expect(pinnedTab).toBeVisible();
     await pinnedTab.click();
+
+    await expect(
+        page.getByRole('button', { name: 'Unpin all items' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('button', { name: 'Open all items in a new graph' }),
+    ).toBeVisible();
+    const pinnedRows = page.getByRole('table').locator('tbody tr');
+    await expect(pinnedRows).toHaveCount(Math.min(5, amount));
 }
 
 test('Search for a graph in the query builder, navigate direct connections table, check activity log and navigate to graph page', async ({
@@ -87,7 +100,6 @@ test('Pin and unpin a node with right hand side menu on search cards', async ({
 }) => {
     await searchAndPinNodes(page, 1);
     const pinnedRows = page.getByRole('table').locator('tbody tr');
-    await expect(pinnedRows).toHaveCount(1);
     await pinnedRows.first().click({ button: 'right' });
     await page
         .getByRole('menuitem', {
@@ -99,14 +111,13 @@ test('Pin and unpin a node with right hand side menu on search cards', async ({
 
 test('Unpin all nodes from pinned tab', async ({ page }) => {
     await searchAndPinNodes(page, 2);
-    const pinnedRows = page.getByRole('table').locator('tbody tr');
-    await expect(pinnedRows).toHaveCount(2);
     const unpinAllButton = page.getByRole('button', {
         name: 'Unpin all items',
         exact: true,
     });
     await expect(unpinAllButton).toBeVisible();
     await unpinAllButton.click();
+    const pinnedRows = page.getByRole('table').locator('tbody tr');
     await expect(pinnedRows).toHaveCount(0);
 });
 
@@ -143,6 +154,7 @@ test('Open all items to new graph button on pinned tab', async ({ page }) => {
         name: 'Open all items in a new graph',
         exact: true,
     });
+    await expect(attachAllButton).toBeVisible();
     await attachAllButton.click();
     await expect(page).toHaveURL(
         '/graph?initialNodes=%5B%22Pedro%22%5D&baseGraph=vanilla%2Fevent',
