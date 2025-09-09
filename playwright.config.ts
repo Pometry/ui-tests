@@ -9,6 +9,8 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env'), quiet: true });
 dotenv.config({ path: path.resolve(__dirname, '..', '.env'), quiet: true });
 
+console.log('Using raphtory tag', process.env.RAPHTORY_GRAPHQL_DOCKER_TAG);
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
