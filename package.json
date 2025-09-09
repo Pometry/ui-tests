@@ -20,7 +20,7 @@
         "eslint-check": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preinstall": "npx only-allow pnpm",
         "install-playwright": "pnpm exec playwright install --with-deps",
-        "test": "pnpm exec playwright test",
+        "test": "pnpm exec playwright test --update-snapshots",
         "tsc": "tsc"
     },
     "devDependencies": {
