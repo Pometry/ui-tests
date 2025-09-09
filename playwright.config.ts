@@ -1,12 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env'), quiet: true });
+dotenv.config({ path: path.resolve(__dirname, '..', '.env'), quiet: true });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -73,11 +74,10 @@ export default defineConfig({
     webServer: [
         {
             name: 'raphtory-gql',
-            command: 'cd ../applications/vanilla && python test_server.py',
+            command: `docker run --read-only -v ../applications/vanilla/test_server.py:/var/lib/raphtory/test_server.py -v /tmp/vanilla-graphs:/tmp/vanilla-graphs -p 1736:1736 --entrypoint="python" pometry/raphtory:${process.env.RAPHTORY_GRAPHQL_DOCKER_TAG}-python /var/lib/raphtory/test_server.py`,
             port: 1736,
             timeout: 120 * 1000,
             stdout: 'pipe',
-            reuseExistingServer: !process.env.CI, // Reuse existing server if not in CI
         },
         {
             name: 'vanilla-prod',
