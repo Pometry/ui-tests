@@ -83,7 +83,7 @@ export default defineConfig({
             name: 'vanilla-prod',
             command: 'cd .. && pnpm production-vanilla',
             port: 3000,
-            timeout: 120 * 1000,
+            timeout: 180 * 1000,
             stdout: 'pipe',
         },
     ],
