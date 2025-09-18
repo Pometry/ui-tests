@@ -19,10 +19,10 @@ export default defineConfig({
     // /* Fail the build on CI if you accidentally left test.only in the source code. */
     // forbidOnly: !!process.env.CI,
     // /* Retry on CI only */
-    retries: 1,
+    retries: 3,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     // We use blob on CI to enable sharding
-    reporter: process.env.CI ? 'blob' : 'html',
+    reporter: 'html',
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         /* Base URL to use in actions like `await page.goto('/')`. */
@@ -31,8 +31,6 @@ export default defineConfig({
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
         trace: 'on-first-retry',
     },
-
-    workers: 2,
 
     /* Configure projects for major browsers */
     projects: [
