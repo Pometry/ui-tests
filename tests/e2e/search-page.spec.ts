@@ -206,36 +206,56 @@ test('Search for relationships in certain date range', async ({ page }) => {
             name: 'Select a graph',
         })
         .click();
-    await page.waitForSelector('text="vanilla"');
+    await page
+        .getByRole('row', { name: /^vanilla$/ })
+        .waitFor({ state: 'visible' });
     await page.getByRole('row', { name: /^vanilla$/ }).click();
-    await page.waitForSelector('text="event"');
-    await page.getByRole('table').locator('tbody tr').first().click();
+    await page
+        .getByRole('row', { name: /^event$/ })
+        .waitFor({ state: 'visible' });
+    await page.getByRole('row', { name: /^event$/ }).click();
     await page
         .getByRole('button', {
             name: 'Confirm',
         })
         .click();
     await page
-        .getByRole('button', { name: 'Choose date, selected date is 1 Jan' })
+        .getByRole('button', {
+            name: 'Confirm',
+        })
+        .waitFor({ state: 'hidden' });
+    await page
+        .getByRole('button', {
+            name: 'Choose date, selected date is 1 Jan',
+        })
+        .or(
+            page.getByRole('textbox', {
+                name: 'Choose date, selected date is 1 Jan',
+            }),
+        )
         .click();
     await page
         .getByRole('button', { name: 'calendar view is open, switch' })
         .click();
     await page.getByRole('radio', { name: '2023' }).click();
     await page
-        .getByRole('button', { name: 'Choose date, selected date is 1 Jan' })
+        .getByRole('button', {
+            name: 'Choose date, selected date is 1 Jan',
+        })
+        .or(
+            page.getByRole('textbox', {
+                name: 'Choose date, selected date is 1 Jan',
+            }),
+        )
         .click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('button', { name: 'Next month' }).click();
-    await page.getByRole('gridcell', { name: '1', exact: true }).nth(0).click();
+    for (let i = 0; i < 10; i++) {
+        await page.getByRole('button', { name: 'Next month' }).click();
+    }
+    await page
+        .getByRole('row', { name: '1 2 3 4 5', exact: true })
+        .locator('button')
+        .first()
+        .click();
     await page.getByRole('combobox').filter({ hasText: 'Entity' }).click();
     await page.getByRole('option', { name: 'Relationship' }).click();
     await page.getByRole('textbox', { name: 'Source ID' }).click();

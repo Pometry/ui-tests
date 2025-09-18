@@ -125,10 +125,11 @@ test('Click on Pometry node in graph', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.click('text=Selected');
-    await page.waitForSelector('text=Pometry');
-    await expect(page.getByText('Pometry').nth(0)).toBeVisible();
-    await expect(page.getByText('No properties found')).toBeVisible();
+    await page.getByRole('tab', { name: 'Selected' }).click();
+    await expect(page.getByRole('heading', { name: 'Pometry' })).toBeVisible();
+    await expect(
+        page.getByText('No properties found', { exact: true }),
+    ).toBeVisible();
 });
 
 test('Click on Pedro node in graph', async ({ page }) => {
@@ -146,10 +147,9 @@ test('Click on Pedro node in graph', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.click('text=Selected');
-    await page.waitForSelector('text=Pedro');
-    await expect(page.getByText('Pedro').nth(0)).toBeVisible();
-    await expect(page.getByText('Age').nth(0)).toBeVisible();
+    await page.getByRole('tab', { name: 'Selected' }).click();
+    await expect(page.getByRole('heading', { name: 'Pedro' })).toBeVisible();
+    await expect(page.getByText('Age', { exact: true })).toBeVisible();
 });
 
 test('Click on Hamza node in graph', async ({ page }) => {
@@ -168,10 +168,9 @@ test('Click on Hamza node in graph', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.click('text=Selected');
-    await page.waitForSelector('text=Hamza');
-    await expect(page.getByText('Hamza').nth(0)).toBeVisible();
-    await expect(page.getByText('Age').nth(0)).toBeVisible();
+    await page.getByRole('tab', { name: 'Selected' }).click();
+    await expect(page.getByRole('heading', { name: 'Hamza' })).toBeVisible();
+    await expect(page.getByText('Age', { exact: true })).toBeVisible();
 });
 
 test('Click on Ben node in graph', async ({ page }) => {
@@ -189,10 +188,9 @@ test('Click on Ben node in graph', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.click('text=Selected');
-    await page.waitForSelector('text=Ben');
-    await expect(page.getByText('Ben').nth(0)).toBeVisible();
-    await expect(page.getByText('Age').nth(0)).toBeVisible();
+    await page.getByRole('tab', { name: 'Selected' }).click();
+    await expect(page.getByRole('heading', { name: 'Ben' })).toBeVisible();
+    await expect(page.getByText('Age', { exact: true })).toBeVisible();
 });
 
 test('Double click expand node and delete by floating actions button', async ({
@@ -213,8 +211,7 @@ test('Double click expand node and delete by floating actions button', async ({
             },
         });
     await page.getByRole('tab', { name: 'Selected' }).click();
-    await page.waitForSelector('text=Pedro');
-    await expect(page.getByText('Pedro')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pedro' })).toBeVisible();
     await page
         .getByRole('button', {
             name: 'Delete selected node from current graph',
@@ -490,7 +487,7 @@ test('Click and deselect by floating actions', async ({ page }) => {
             },
         });
     await page.waitForTimeout(5000);
-    await page.click('text=Selected');
+    await page.getByRole('tab', { name: 'Selected' }).click();
 
     await expect(page.getByText('Pedro').nth(0)).toBeVisible();
     await page.getByRole('button', { name: 'Selection' }).click();

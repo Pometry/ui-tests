@@ -31,12 +31,6 @@ pyrightconfig.json
 *.sln
 *.sw?
 
-# Ignore other package manager files
-# WARNING: If we ever change from pnpm we can remove these lines
-yarn.lock
-package-lock.json
-.npmrc
-
 # Playwright
 /test-results/
 /playwright-report/

@@ -55,13 +55,12 @@ export async function searchForEntity(
     await page.waitForSelector('text="vanilla"');
     await page.getByRole('row', { name: /^vanilla$/ }).click();
     await page.waitForSelector('text="event"');
-    await page.getByRole('table').locator('tbody tr').first().click();
+    await page.getByRole('row', { name: /^event$/ }).click();
     await page
         .getByRole('button', {
             name: 'Confirm',
         })
         .click();
-    await (await page.waitForSelector('text="Confirm"')).isHidden();
     if (entity.type === 'node') {
         await page.getByRole('combobox', { name: 'Select type' }).click();
         await page.getByRole('option', { name: entity.nodeType }).click();
