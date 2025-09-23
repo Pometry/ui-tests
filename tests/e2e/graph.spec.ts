@@ -9,7 +9,7 @@ async function fitView(page: Page) {
     await page
         .getByRole('button', { name: 'Fit all nodes within visible region' })
         .click();
-    await page.waitForTimeout(3000);
+    await waitForLayoutToFinish(page);
 }
 
 test('Close right hand side panel button and open again', async ({ page }) => {
@@ -46,6 +46,7 @@ test('Click save as button opens save as dialog', async ({ page }) => {
 
 test('Highlight founds then transfers', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await expect(page.getByRole('progressbar')).toBeHidden();
     await page.getByRole('button', { name: 'Relationships' }).waitFor();
     const firstRow = page.locator('table tbody tr').first();
     const firstButton = firstRow.locator('td').first().locator('button');
@@ -100,10 +101,10 @@ test('Zoom in, zoom out, fit view button', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
     await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Zoom in' }).click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('zoomedin.png');
     await page.getByRole('button', { name: 'Zoom out' }).click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('zoomedout.png');
     await fitView(page);
     expect(await page.screenshot()).toMatchSnapshot('fitview.png');
@@ -115,7 +116,6 @@ test('Click on Pometry node in graph', async ({ page }) => {
         nodeName: 'Pometry',
         nodeType: 'Company',
     });
-    await waitForLayoutToFinish(page);
     await page
         .locator('canvas')
         .nth(1)
@@ -218,7 +218,7 @@ test('Double click expand node and delete by floating actions button', async ({
             exact: true,
         })
         .click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('deletednode.png', {
         maxDiffPixels: 100,
         maxDiffPixelRatio: 0.01,
@@ -226,6 +226,7 @@ test('Double click expand node and delete by floating actions button', async ({
     await page.getByRole('tab', { name: 'Overview' }).click();
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
 
+    await waitForLayoutToFinish(page);
     await page
         .locator('canvas')
         .nth(1)
@@ -353,6 +354,7 @@ test('Expand shared neighbours by floating actions button', async ({
             exact: true,
         })
         .click();
+    await waitForLayoutToFinish(page);
     await page.waitForSelector('text=Ben');
     await expect(page.getByText('Ben')).toBeVisible();
     await expect(page.getByText('Hamza')).toBeVisible();
@@ -415,6 +417,7 @@ test('Undo and redo in floating actions menu', async ({ page }) => {
                 y: 175,
             },
         });
+    await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await page.getByRole('button', { name: 'Redo', exact: true }).click();
     await page.waitForSelector('text=Pedro');
@@ -441,7 +444,7 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     await page.waitForSelector('text="Pedro"');
     await fitView(page);
     await page
@@ -457,7 +460,7 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
     await page
         .getByRole('menuitem', { name: 'Select all similar nodes' })
         .click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     if (temporalView) {
         expect(await page.screenshot({ clip: temporalView })).toMatchSnapshot(
             'selectsimilarnodes.png',
@@ -486,13 +489,12 @@ test('Click and deselect by floating actions', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.waitForTimeout(5000);
     await page.getByRole('tab', { name: 'Selected' }).click();
 
     await expect(page.getByText('Pedro').nth(0)).toBeVisible();
     await page.getByRole('button', { name: 'Selection' }).click();
     await page.getByRole('menuitem', { name: 'Deselect all nodes' }).click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('deselectnodes.png', {
         maxDiffPixels: 20000,
         maxDiffPixelRatio: 0.01,
@@ -514,7 +516,7 @@ test('Click backspace to delete nodes', async ({ page }) => {
                 y: 175,
             },
         });
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     await page.waitForSelector('text="Pedro"');
     await fitView(page);
     await page

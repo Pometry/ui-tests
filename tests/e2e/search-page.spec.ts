@@ -1,5 +1,9 @@
 import { expect, Page, test } from '@playwright/test';
-import { fillInCondition, searchForEntity } from './utils';
+import {
+    fillInCondition,
+    searchForEntity,
+    waitForLayoutToFinish,
+} from './utils';
 
 async function searchAndPinNodes(page: Page, amount: number) {
     if (amount <= 0) {
@@ -294,7 +298,7 @@ test('Delete condition in query builder', async ({ page }) => {
         )
         .click();
     await page.getByRole('button', { name: 'Search', exact: true }).click();
-    await page.waitForTimeout(3000);
+    await waitForLayoutToFinish(page);
     await expect(page.getByRole('table')).toBeVisible();
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1);
 });
@@ -306,7 +310,7 @@ test('is, is not condition statements in query builder', async ({ page }) => {
         nodeType: 'Person',
         conditions: [{ name: 'ID', value: 'Pedro' }],
     });
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     await expect(page.getByRole('table')).toBeVisible();
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1);
 
@@ -315,7 +319,7 @@ test('is, is not condition statements in query builder', async ({ page }) => {
         value: 'Pedro',
     });
     await page.getByRole('button', { name: 'Search', exact: true }).click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     await expect(page.getByRole('table')).toBeVisible();
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2);
 });
@@ -331,7 +335,7 @@ test('includes, excludes condition statements in query builder', async ({
             { name: 'ID', op: { current: 'Is', new: 'Includes' }, value: 'Pe' },
         ],
     });
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(1);
 
     await fillInCondition(page, {
@@ -339,6 +343,6 @@ test('includes, excludes condition statements in query builder', async ({
         value: 'Pe',
     });
     await page.getByRole('button', { name: 'Search', exact: true }).click();
-    await page.waitForTimeout(5000);
+    await waitForLayoutToFinish(page);
     await expect(page.getByRole('table').locator('tbody tr')).toHaveCount(2);
 });
