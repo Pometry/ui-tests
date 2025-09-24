@@ -35,7 +35,7 @@ export default defineConfig({
     },
 
     workers: 4,
-    timeout: 45000,
+    timeout: 30000,
 
     /* Configure projects for major browsers */
     projects: [
