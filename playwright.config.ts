@@ -34,7 +34,6 @@ export default defineConfig({
         video: 'on-first-retry',
     },
 
-    workers: 4,
     timeout: 30000,
 
     /* Configure projects for major browsers */
