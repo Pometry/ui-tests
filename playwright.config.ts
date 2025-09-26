@@ -69,25 +69,6 @@ export default defineConfig({
         // },
     ],
 
-    webServer: [
-        {
-            name: 'raphtory-gql',
-            command: 'cd .. && docker compose up raphtory-graphql',
-            port: 1736,
-            timeout: 120 * 1000,
-            stdout: 'pipe',
-            reuseExistingServer: !process.env.CI, // Reuse existing server if not in CI
-        },
-        {
-            name: 'vanilla-prod',
-            command: 'cd .. && docker compose up vanilla-prod',
-            port: 3000,
-            timeout: 120 * 1000,
-            stdout: 'pipe',
-            reuseExistingServer: !process.env.CI, // Reuse existing server if not in CI
-        },
-    ],
-
     expect: {
         toMatchSnapshot: {
             maxDiffPixels: 2000,
