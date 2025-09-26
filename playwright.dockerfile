@@ -7,6 +7,7 @@ RUN npm install
 RUN npx playwright install --with-deps
 
 COPY ./playwright.config.ts .
+COPY ./playwright.merge.config.ts .
 
 ENV PLAYWRIGHT_HTML_HOST=0.0.0.0
 
