@@ -1,8 +1,0 @@
-!.github/
-!.ladle/
-!.*.cjs
-!.*.mjs
-!.*.json
-__generated/**/*
-dist
-types/

@@ -70,7 +70,7 @@ export async function searchForEntity(
                 .locator('div')
                 .filter({
                     hasText: new RegExp(
-                        `^With the following conditions:${entity.nodeType}\$`,
+                        `^With the following conditions:${entity.nodeType}$`,
                     ),
                 })
                 .getByRole('button')
