@@ -48,9 +48,10 @@ test('Highlight founds then transfers', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
     await expect(page.getByRole('progressbar')).toBeHidden();
     await page.getByRole('button', { name: 'Relationships' }).waitFor();
-    const firstRow = page.locator('table tbody tr').first();
-    const firstButton = firstRow.locator('td').first().locator('button');
-    await firstButton.click();
+    await page
+        .getByRole('row', { name: 'transfers' })
+        .getByRole('button')
+        .click();
     await expect(
         page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
     ).toHaveCSS('fill', 'rgb(117, 135, 72)');
@@ -60,9 +61,7 @@ test('Highlight founds then transfers', async ({ page }) => {
     await expect(
         page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
     ).toHaveCSS('fill', 'rgb(117, 135, 72)');
-    const thirdRow = page.locator('table tbody tr').nth(2);
-    const thirdFirstButton = thirdRow.locator('td').first().locator('button');
-    await thirdFirstButton.click();
+    await page.getByRole('row', { name: 'founds' }).getByRole('button').click();
     await expect(
         page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
     ).toHaveCSS('fill', 'rgb(117, 135, 72)');
