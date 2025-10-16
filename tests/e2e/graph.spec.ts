@@ -432,7 +432,7 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         nodeType: 'Person',
     });
     const temporalView = await page
-        .locator('.css-gnkdhv-MuiPaper-root')
+        .locator('.MuiBox-root.css-11m7pg9')
         .boundingBox();
     await page
         .locator('canvas')
