@@ -117,11 +117,9 @@ test('Pin node and highlight', async ({ page }) => {
 test('Zoom into timeline view', async ({ page }) => {
     await setupGraphPage(page);
     await page.waitForSelector('text="Pometry"');
-    const element = page.locator(
-        '.MuiPaper-root.MuiPaper-elevation.MuiPaper-rounded.MuiPaper-elevation1.css-gnkdhv-MuiPaper-root',
-    );
-    await expect(element).toBeVisible();
-    const box = await element.boundingBox();
+    const temporalView = page.getByRole('region', { name: 'Temporal View' });
+    await expect(temporalView).toBeVisible();
+    const box = await temporalView.boundingBox();
     if (box !== null) {
         const offsetX = box.width / 2;
         const offsetY = box.height / 2;

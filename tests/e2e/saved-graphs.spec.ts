@@ -172,11 +172,11 @@ test('Filter by Columns', async ({ page }) => {
     await expect(rows).toHaveCount(1);
     const firstRowName = await rows.first().locator('td').nth(1).textContent();
     await expect(firstRowName).toBe('event');
-    await page.getByRole('button', { name: 'Clear filter' }).nth(1).click();
+    await page.getByRole('button', { name: 'Clear filter' }).click();
     const filterNodeCountInput = page.getByPlaceholder('Filter by Node Count');
     await filterNodeCountInput.fill('501');
     await expect(rows).toHaveCount(1);
-    await page.getByRole('button', { name: 'Clear filter' }).nth(2).click();
+    await page.getByRole('button', { name: 'Clear filter' }).click();
     const filterEdgeCountInput = page.getByPlaceholder('Filter by Edge Count');
     await filterEdgeCountInput.fill('4');
     await expect(rows).toHaveCount(2);
