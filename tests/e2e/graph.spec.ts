@@ -431,8 +431,10 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    const temporalView = await page
-        .locator('.MuiBox-root.css-11m7pg9')
+    const temporalViewBoundingBox = await page
+        .getByRole('region', {
+            name: 'Temporal View',
+        })
         .boundingBox();
     await page
         .locator('canvas')
@@ -460,14 +462,13 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         .getByRole('menuitem', { name: 'Select all similar nodes' })
         .click();
     await waitForLayoutToFinish(page);
-    if (temporalView) {
-        expect(await page.screenshot({ clip: temporalView })).toMatchSnapshot(
-            'selectsimilarnodes.png',
-            {
-                maxDiffPixels: 20000,
-                maxDiffPixelRatio: 0.01,
-            },
-        );
+    if (temporalViewBoundingBox !== null) {
+        expect(
+            await page.screenshot({ clip: temporalViewBoundingBox }),
+        ).toMatchSnapshot('selectsimilarnodes.png', {
+            maxDiffPixels: 20000,
+            maxDiffPixelRatio: 0.01,
+        });
     } else {
         throw new Error('Element not found or not visible');
     }
