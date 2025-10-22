@@ -121,7 +121,9 @@ export async function navigateToGraphPageBySearch(
     if (entity.type === 'node') {
         if (entity.nodeType === 'Person') {
             await page
-                .getByRole('button', { name: `${entity.nodeName} Age` })
+                .getByRole('button', {
+                    name: `${entity.nodeName} Properties: Age`,
+                })
                 .dblclick();
         } else if (entity.nodeType === 'Company') {
             await page
