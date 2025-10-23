@@ -533,6 +533,139 @@ test('Click backspace to delete nodes', async ({ page }) => {
     await expect(page.getByText('Ben')).toBeVisible();
 });
 
+test('Change colour and size of node', async ({ page }) => {
+    await navigateToGraphPageBySearch(page, {
+        type: 'node',
+        nodeName: 'Pedro',
+        nodeType: 'Person',
+    });
+    await page
+        .locator('canvas')
+        .nth(1)
+        .dblclick({
+            position: {
+                x: 350,
+                y: 175,
+            },
+        });
+    await waitForLayoutToFinish(page);
+    await page.waitForSelector('text="Pedro"');
+    await fitView(page);
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({
+            position: {
+                x: 260,
+                y: 235,
+            },
+        });
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('D0021B');
+    await page.getByPlaceholder('Vertex size').fill('30');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(1000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'node-colour-size-change.png',
+    );
+    await page.getByRole('button', { name: 'clear-individual-style' }).click();
+    await page.waitForTimeout(2000);
+});
+
+test('Change colour and size of edge', async ({ page }) => {
+    await navigateToGraphPageBySearch(page, {
+        type: 'node',
+        nodeName: 'Pedro',
+        nodeType: 'Person',
+    });
+    await page
+        .locator('canvas')
+        .nth(1)
+        .dblclick({
+            position: {
+                x: 350,
+                y: 175,
+            },
+        });
+    await waitForLayoutToFinish(page);
+    await page.waitForSelector('text="Pedro"');
+    await fitView(page);
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({
+            position: {
+                x: 445,
+                y: 195,
+            },
+        });
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    await page.getByPlaceholder('Edge Width').fill('5');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(1000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'edge-colour-size-change.png',
+    );
+    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+
+    await page.waitForTimeout(2000);
+});
+test('Change colour and size of node by type', async ({ page }) => {
+    await navigateToGraphPageBySearch(page, {
+        type: 'node',
+        nodeName: 'Pedro',
+        nodeType: 'Person',
+    });
+
+    await waitForLayoutToFinish(page);
+    await fitView(page);
+
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    const dropdown = page.locator('#node-type-select');
+    await dropdown.click();
+    await page.getByRole('option', { name: 'Person' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('D0021B');
+    await page.getByPlaceholder('Vertex size').fill('30');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(1000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'node-type-colour-size-change.png',
+    );
+    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+    await page.waitForTimeout(2000);
+});
+
 // skipping because we have a lot of random errors in the console, need to fix that first
 test.skip('catch any errors in the console', async ({ page }) => {
     const consoleErrors: string[] = [];
