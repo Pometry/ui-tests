@@ -539,25 +539,16 @@ test('Change colour and size of node', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    await page
-        .locator('canvas')
-        .nth(1)
-        .dblclick({
-            position: {
-                x: 350,
-                y: 175,
-            },
-        });
+
     await waitForLayoutToFinish(page);
-    await page.waitForSelector('text="Pedro"');
     await fitView(page);
     await page
         .locator('canvas')
         .nth(1)
         .click({
             position: {
-                x: 260,
-                y: 235,
+                x: 359,
+                y: 179,
             },
         });
     await page.getByRole('tab', { name: 'Graph settings' }).click();
@@ -571,7 +562,7 @@ test('Change colour and size of node', async ({ page }) => {
         .locator('div')
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
-        .fill('D0021B');
+        .fill('BD10E0');
     await page.getByPlaceholder('Vertex size').fill('30');
     await page.getByRole('button', { name: 'save', exact: true }).click();
     await page.waitForTimeout(3000);
