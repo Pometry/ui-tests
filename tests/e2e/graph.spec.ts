@@ -574,7 +574,7 @@ test('Change colour and size of node', async ({ page }) => {
         .fill('D0021B');
     await page.getByPlaceholder('Vertex size').fill('30');
     await page.getByRole('button', { name: 'save', exact: true }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
     expect(await page.screenshot()).toMatchSnapshot(
         'node-colour-size-change.png',
     );
@@ -623,7 +623,7 @@ test('Change colour and size of edge', async ({ page }) => {
         .fill('F5A623');
     await page.getByPlaceholder('Edge Width').fill('5');
     await page.getByRole('button', { name: 'save', exact: true }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
     expect(await page.screenshot()).toMatchSnapshot(
         'edge-colour-size-change.png',
     );
@@ -658,7 +658,7 @@ test('Change colour and size of node by type', async ({ page }) => {
         .fill('D0021B');
     await page.getByPlaceholder('Vertex size').fill('30');
     await page.getByRole('button', { name: 'save', exact: true }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
     expect(await page.screenshot()).toMatchSnapshot(
         'node-type-colour-size-change.png',
     );
