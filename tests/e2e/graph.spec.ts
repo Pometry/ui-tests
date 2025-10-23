@@ -75,7 +75,10 @@ test('Highlight founds then transfers', async ({ page }) => {
 
 test('Test layouts', async ({ page }) => {
     test.setTimeout(60000);
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/saved-graphs');
+    await page.getByRole('cell', { name: 'vanilla' }).click();
+    await page.getByRole('cell', { name: 'event' }).dblclick();
+
     // The extra timeout here helps to make the next line more consistent
     await waitForLayoutToFinish(page, 5000);
     await selectLayout(page, 'Concentric Layout');
@@ -97,7 +100,9 @@ test('Test layouts', async ({ page }) => {
 });
 
 test('Zoom in, zoom out, fit view button', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/saved-graphs');
+    await page.getByRole('cell', { name: 'vanilla' }).click();
+    await page.getByRole('cell', { name: 'event' }).dblclick();
     await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Zoom in' }).click();
     await waitForLayoutToFinish(page);
@@ -534,21 +539,22 @@ test('Click backspace to delete nodes', async ({ page }) => {
 });
 
 test('Change colour and size of node', async ({ page }) => {
-    await navigateToGraphPageBySearch(page, {
-        type: 'node',
-        nodeName: 'Pedro',
-        nodeType: 'Person',
-    });
-
+    await page.goto('/saved-graphs');
+    await page.getByRole('row', { name: /^new_folder$/ }).click();
+    await page.getByRole('cell', { name: 'persistent_filler' }).dblclick();
     await waitForLayoutToFinish(page);
     await fitView(page);
+    await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas');
+        return canvas && canvas.width > 0 && canvas.height > 0;
+    });
     await page
         .locator('canvas')
         .nth(1)
         .click({
             position: {
-                x: 359,
-                y: 179,
+                x: 275,
+                y: 85,
             },
         });
     await page.getByRole('tab', { name: 'Graph settings' }).click();
@@ -574,30 +580,22 @@ test('Change colour and size of node', async ({ page }) => {
 });
 
 test('Change colour and size of edge', async ({ page }) => {
-    await navigateToGraphPageBySearch(page, {
-        type: 'node',
-        nodeName: 'Pedro',
-        nodeType: 'Person',
-    });
+    await page.goto('/saved-graphs');
+    await page.getByRole('row', { name: /^new_folder$/ }).click();
     await page
-        .locator('canvas')
-        .nth(1)
-        .dblclick({
-            position: {
-                x: 350,
-                y: 175,
-            },
-        });
+        .getByRole('cell', { name: 'persistent_second_filler' })
+        .dblclick();
+
     await waitForLayoutToFinish(page);
-    await page.waitForSelector('text="Pedro"');
     await fitView(page);
+
     await page
         .locator('canvas')
         .nth(1)
         .click({
             position: {
-                x: 445,
-                y: 195,
+                x: 391,
+                y: 209,
             },
         });
     await page.getByRole('tab', { name: 'Graph settings' }).click();
@@ -614,7 +612,7 @@ test('Change colour and size of edge', async ({ page }) => {
         .fill('F5A623');
     await page.getByPlaceholder('Edge Width').fill('5');
     await page.getByRole('button', { name: 'save', exact: true }).click();
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(5000);
     expect(await page.screenshot()).toMatchSnapshot(
         'edge-colour-size-change.png',
     );
