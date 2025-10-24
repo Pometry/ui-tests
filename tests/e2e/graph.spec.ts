@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import {
     navigateToGraphPageBySearch,
+    navigateToSavedGraphBySavedGraphsTable,
     selectLayout,
     waitForLayoutToFinish,
 } from './utils';
@@ -75,12 +76,10 @@ test('Highlight founds then transfers', async ({ page }) => {
 
 test('Test layouts', async ({ page }) => {
     test.setTimeout(60000);
-    await page.goto('/saved-graphs');
-    await page.getByRole('cell', { name: 'vanilla' }).click();
-    await page.getByRole('cell', { name: 'event' }).dblclick();
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
 
     // The extra timeout here helps to make the next line more consistent
-    await waitForLayoutToFinish(page, 5000);
+    await waitForLayoutToFinish(page, 3000);
     await selectLayout(page, 'Concentric Layout');
     expect(await page.screenshot()).toMatchSnapshot('concentric-layout.png');
     await selectLayout(page, 'Force Based Layout');
@@ -100,10 +99,8 @@ test('Test layouts', async ({ page }) => {
 });
 
 test('Zoom in, zoom out, fit view button', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    await page.getByRole('cell', { name: 'vanilla' }).click();
-    await page.getByRole('cell', { name: 'event' }).dblclick();
-    await waitForLayoutToFinish(page);
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+
     await page.getByRole('button', { name: 'Zoom in' }).click();
     await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('zoomedin.png');
@@ -539,10 +536,11 @@ test('Click backspace to delete nodes', async ({ page }) => {
 });
 
 test('Change colour and size of node', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    await page.getByRole('row', { name: /^new_folder$/ }).click();
-    await page.getByRole('cell', { name: 'persistent_filler' }).dblclick();
-    await waitForLayoutToFinish(page);
+    navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'new_folder',
+        'persistent_filler',
+    );
     await fitView(page);
     await page.waitForFunction(() => {
         const canvas = document.querySelector('canvas');
@@ -580,13 +578,11 @@ test('Change colour and size of node', async ({ page }) => {
 });
 
 test('Change colour and size of edge', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    await page.getByRole('row', { name: /^new_folder$/ }).click();
-    await page
-        .getByRole('cell', { name: 'persistent_second_filler' })
-        .dblclick();
-
-    await waitForLayoutToFinish(page);
+    navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'new_folder',
+        'persistent_second_filler',
+    );
     await fitView(page);
 
     await page
