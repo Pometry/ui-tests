@@ -121,7 +121,9 @@ export async function navigateToGraphPageBySearch(
     if (entity.type === 'node') {
         if (entity.nodeType === 'Person') {
             await page
-                .getByRole('button', { name: `${entity.nodeName} Age` })
+                .getByRole('button', {
+                    name: `${entity.nodeName} Properties: Age`,
+                })
                 .dblclick();
         } else if (entity.nodeType === 'Company') {
             await page
@@ -138,6 +140,19 @@ export async function navigateToGraphPageBySearch(
             .dblclick();
     }
 
+    await waitForLayoutToFinish(page);
+}
+
+export async function navigateToSavedGraphBySavedGraphsTable(
+    page: Page,
+    folderName: string,
+    graphName: string,
+) {
+    await page.goto('/saved-graphs');
+    await page
+        .getByRole('row', { name: new RegExp(`^${folderName}$`) })
+        .click();
+    await page.getByRole('cell', { name: graphName }).dblclick();
     await waitForLayoutToFinish(page);
 }
 

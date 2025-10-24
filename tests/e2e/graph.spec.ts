@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import {
     navigateToGraphPageBySearch,
+    navigateToSavedGraphBySavedGraphsTable,
     selectLayout,
     waitForLayoutToFinish,
 } from './utils';
@@ -75,9 +76,10 @@ test('Highlight founds then transfers', async ({ page }) => {
 
 test('Test layouts', async ({ page }) => {
     test.setTimeout(60000);
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+
     // The extra timeout here helps to make the next line more consistent
-    await waitForLayoutToFinish(page, 5000);
+    await waitForLayoutToFinish(page, 3000);
     await selectLayout(page, 'Concentric Layout');
     expect(await page.screenshot()).toMatchSnapshot('concentric-layout.png');
     await selectLayout(page, 'Force Based Layout');
@@ -97,8 +99,8 @@ test('Test layouts', async ({ page }) => {
 });
 
 test('Zoom in, zoom out, fit view button', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
-    await waitForLayoutToFinish(page);
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+
     await page.getByRole('button', { name: 'Zoom in' }).click();
     await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('zoomedin.png');
@@ -531,6 +533,122 @@ test('Click backspace to delete nodes', async ({ page }) => {
     await expect(page.getByText('Hamza')).toBeHidden();
     await expect(page.getByText('Pedro')).toBeVisible();
     await expect(page.getByText('Ben')).toBeVisible();
+});
+
+test('Change colour and size of node', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'new_folder',
+        'persistent_filler',
+    );
+    await fitView(page);
+    await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas');
+        return canvas && canvas.width > 0 && canvas.height > 0;
+    });
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({
+            position: {
+                x: 275,
+                y: 85,
+            },
+        });
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('BD10E0');
+    await page.getByPlaceholder('Vertex size').fill('30');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(3000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'node-colour-size-change.png',
+    );
+    await page.getByRole('button', { name: 'clear-individual-style' }).click();
+    await page.waitForTimeout(2000);
+});
+
+test('Change colour and size of edge', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'new_folder',
+        'persistent_second_filler',
+    );
+    await fitView(page);
+
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({
+            position: {
+                x: 391,
+                y: 209,
+            },
+        });
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    await page.getByPlaceholder('Edge Width').fill('5');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(5000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'edge-colour-size-change.png',
+    );
+    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+
+    await page.waitForTimeout(2000);
+});
+test('Change colour and size of node by type', async ({ page }) => {
+    await navigateToGraphPageBySearch(page, {
+        type: 'node',
+        nodeName: 'Pedro',
+        nodeType: 'Person',
+    });
+
+    await waitForLayoutToFinish(page);
+    await fitView(page);
+
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    const dropdown = page.locator('#node-type-select');
+    await dropdown.click();
+    await page.getByRole('option', { name: 'Person' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('D0021B');
+    await page.getByPlaceholder('Vertex size').fill('30');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(2000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'node-type-colour-size-change.png',
+    );
+    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+    await page.waitForTimeout(2000);
 });
 
 // skipping because we have a lot of random errors in the console, need to fix that first
