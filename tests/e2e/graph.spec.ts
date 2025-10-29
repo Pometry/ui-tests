@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import {
     navigateToGraphPageBySearch,
+    navigateToSavedGraphBySavedGraphsTable,
     selectLayout,
     waitForLayoutToFinish,
 } from './utils';
@@ -75,9 +76,9 @@ test('Highlight founds then transfers', async ({ page }) => {
 
 test('Test layouts', async ({ page }) => {
     test.setTimeout(60000);
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     // The extra timeout here helps to make the next line more consistent
-    await waitForLayoutToFinish(page, 5000);
+    await waitForLayoutToFinish(page, 3000);
     await selectLayout(page, 'Concentric Layout');
     expect(await page.screenshot()).toMatchSnapshot('concentric-layout.png');
     await selectLayout(page, 'Force Based Layout');
@@ -97,8 +98,7 @@ test('Test layouts', async ({ page }) => {
 });
 
 test('Zoom in, zoom out, fit view button', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
-    await waitForLayoutToFinish(page);
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     await page.getByRole('button', { name: 'Zoom in' }).click();
     await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('zoomedin.png');

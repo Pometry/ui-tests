@@ -166,3 +166,16 @@ export async function waitForLayoutToFinish(
     // this extra timeout is to account for the animation
     await page.waitForTimeout(2000);
 }
+
+export async function navigateToSavedGraphBySavedGraphsTable(
+    page: Page,
+    folderName: string,
+    graphName: string,
+) {
+    await page.goto('/saved-graphs');
+    await page
+        .getByRole('row', { name: new RegExp(`^${folderName}$`) })
+        .click();
+    await page.getByRole('cell', { name: graphName }).dblclick();
+    await waitForLayoutToFinish(page);
+}
