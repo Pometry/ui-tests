@@ -177,5 +177,5 @@ export async function navigateToSavedGraphBySavedGraphsTable(
         .getByRole('row', { name: new RegExp(`^${folderName}$`) })
         .click();
     await page.getByRole('cell', { name: graphName }).dblclick();
-    await waitForLayoutToFinish(page);
+    await page.waitForSelector('text=Ben');
 }
