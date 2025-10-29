@@ -4,7 +4,7 @@ WORKDIR /app
 COPY ./package.json .
 COPY ./package-lock.json .
 RUN npm install
-RUN apt-get update --fix-missing && apt-get install -y xvfb
+RUN apt-get update --fix-missing 
 RUN npx playwright install --with-deps
 
 COPY ./playwright.config.ts .
