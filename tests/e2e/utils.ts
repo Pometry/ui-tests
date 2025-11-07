@@ -152,7 +152,9 @@ export async function navigateToSavedGraphBySavedGraphsTable(
     await page
         .getByRole('row', { name: new RegExp(`^${folderName}$`) })
         .click();
-    await page.getByRole('cell', { name: graphName }).dblclick();
+    await page
+        .getByRole('cell', { name: new RegExp(`^${graphName}$`, 'i') })
+        .dblclick();
     await waitForLayoutToFinish(page);
 }
 

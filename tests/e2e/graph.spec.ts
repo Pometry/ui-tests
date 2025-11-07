@@ -567,7 +567,7 @@ test('Change colour and size of node', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('BD10E0');
-    await page.getByPlaceholder('Vertex size').fill('30');
+    await page.getByPlaceholder('Node size').fill('30');
     await page.getByRole('button', { name: 'save', exact: true }).click();
     await page.waitForTimeout(3000);
     expect(await page.screenshot()).toMatchSnapshot(
@@ -577,7 +577,7 @@ test('Change colour and size of node', async ({ page }) => {
     await page.waitForTimeout(2000);
 });
 
-test('Change colour and size of edge', async ({ page }) => {
+test('Change colour of edge by layer dropdown', async ({ page }) => {
     navigateToSavedGraphBySavedGraphsTable(
         page,
         'new_folder',
@@ -595,6 +595,9 @@ test('Change colour and size of edge', async ({ page }) => {
             },
         });
     await page.getByRole('tab', { name: 'Graph settings' }).click();
+    const dropdown = page.locator('#edge-layer-select');
+    await dropdown.click();
+    await page.getByRole('option', { name: 'advises' }).click();
     await page
         .locator('div')
         .filter({ hasText: /^Hex$/ })
@@ -606,24 +609,17 @@ test('Change colour and size of edge', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('F5A623');
-    await page.getByPlaceholder('Edge Width').fill('5');
     await page.getByRole('button', { name: 'save', exact: true }).click();
     await page.waitForTimeout(5000);
     expect(await page.screenshot()).toMatchSnapshot(
-        'edge-colour-size-change.png',
+        'edge-colour-change-layer-dropdown.png',
     );
     await page.getByRole('button', { name: 'reset-to-default-style' }).click();
 
     await page.waitForTimeout(2000);
 });
 test('Change colour and size of node by type', async ({ page }) => {
-    await navigateToGraphPageBySearch(page, {
-        type: 'node',
-        nodeName: 'Pedro',
-        nodeType: 'Person',
-    });
-
-    await waitForLayoutToFinish(page);
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await fitView(page);
 
     await page.getByRole('tab', { name: 'Graph settings' }).click();
@@ -641,7 +637,7 @@ test('Change colour and size of node by type', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('D0021B');
-    await page.getByPlaceholder('Vertex size').fill('30');
+    await page.getByPlaceholder('Node size').fill('30');
     await page.getByRole('button', { name: 'save', exact: true }).click();
     await page.waitForTimeout(2000);
     expect(await page.screenshot()).toMatchSnapshot(
@@ -649,6 +645,105 @@ test('Change colour and size of node by type', async ({ page }) => {
     );
     await page.getByRole('button', { name: 'reset-to-default-style' }).click();
     await page.waitForTimeout(2000);
+});
+
+test('Preview colour and size by type changes', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'second_filler');
+    await fitView(page);
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    const dropdown = page.locator('#node-type-select');
+    await dropdown.click();
+    await page.getByRole('option', { name: 'Person' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('D0021B');
+    await page.getByPlaceholder('Node size').fill('30');
+    expect(await page.screenshot()).toMatchSnapshot(
+        'preview-node-type-colour-size-change.png',
+    );
+});
+
+test('Preview colour and size changes', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+    await fitView(page);
+    await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas');
+        return canvas && canvas.width > 0 && canvas.height > 0;
+    });
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({
+            position: {
+                x: 245,
+                y: 126,
+            },
+        });
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('BD10E0');
+    await page.getByPlaceholder('Node size').fill('30');
+    expect(await page.screenshot()).toMatchSnapshot(
+        'preview-node-colour-size-change.png',
+    );
+});
+
+test('Preview edge colour changes', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_second_filler',
+    );
+    await fitView(page);
+
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({
+            position: {
+                x: 394,
+                y: 206,
+            },
+        });
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    const dropdown = page.locator('#edge-layer-select');
+    await dropdown.click();
+    await page.getByRole('option', { name: 'advises' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    expect(await page.screenshot()).toMatchSnapshot(
+        'preview-edge-colour-change-layer-dropdown.png',
+    );
 });
 
 // skipping because we have a lot of random errors in the console, need to fix that first
