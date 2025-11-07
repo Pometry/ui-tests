@@ -1,8 +1,4 @@
 import { expect, Page, test } from '@playwright/test';
-import {
-    navigateToSavedGraphBySavedGraphsTable,
-    waitForLayoutToFinish,
-} from './utils';
 
 async function setupGraphPage(
     page: Page,
