@@ -155,7 +155,7 @@ export async function navigateToSavedGraphBySavedGraphsTable(
     await page
         .getByRole('cell', { name: new RegExp(`^${graphName}$`, 'i') })
         .dblclick();
-    await waitForLayoutToFinish(page);
+    await expect(page.getByRole('progressbar')).toBeHidden();
 }
 
 export async function selectLayout(
