@@ -1,8 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
-import {
-    navigateToSavedGraphBySavedGraphsTable,
-    waitForLayoutToFinish,
-} from './utils';
+import { navigateToSavedGraphBySavedGraphsTable } from './utils';
 
 async function setupGraphPage(
     page: Page,
@@ -137,7 +134,7 @@ test('Zoom into timeline view', async ({ page }) => {
 });
 
 test('Highlight node from timeline view', async ({ page }) => {
-    await setupGraphPage(page);
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     await page
         .locator('g')
         .filter({ hasText: /^Ben$/ })
