@@ -1,4 +1,8 @@
 import { expect, Page, test } from '@playwright/test';
+import {
+    navigateToSavedGraphBySavedGraphsTable,
+    waitForLayoutToFinish,
+} from './utils';
 
 async function setupGraphPage(
     page: Page,
@@ -91,8 +95,8 @@ test('Temporal view hover over edges', async ({ page }) => {
 });
 
 test('Pin node and highlight', async ({ page }) => {
-    await setupGraphPage(page);
-    await page.waitForSelector('text=Pedro');
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    //   await page.waitForSelector('text=Pedro');
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
@@ -153,46 +157,49 @@ test('Highlight node from timeline view', async ({ page }) => {
     await page.getByRole('row', { name: 'Node Type Person' }).isVisible();
 });
 
-// test('Preview colour of edge on timeline view', async ({ page }) => {
-//     navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
-//     await waitForLayoutToFinish(page);
-//     await page.locator('g:nth-child(19) > line:nth-child(6)').click();
-//     await page.getByRole('tab', { name: 'Graph settings' }).click();
-//     await page
-//         .locator('div')
-//         .filter({ hasText: /^Hex$/ })
-//         .getByRole('textbox')
-//         .click();
+test('Preview colour of edge on timeline view', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
 
-//     await page
-//         .locator('div')
-//         .filter({ hasText: /^Hex$/ })
-//         .getByRole('textbox')
-//         .fill('F5A623');
-//     expect(await page.screenshot()).toMatchSnapshot(
-//         'preview-temporal-edge-colour-change.png',
-//     );
-// });
+    await page.getByLabel('Edge ID Ben->Pedro_meets_1679356800000').click();
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
 
-// test('Change colour of edge on timeline view', async ({ page }) => {
-//     navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
-//     await waitForLayoutToFinish(page);
-//     await page.locator('g:nth-child(7) > line:nth-child(6)').click();
-//     await page.getByRole('tab', { name: 'Graph settings' }).click();
-//     await page
-//         .locator('div')
-//         .filter({ hasText: /^Hex$/ })
-//         .getByRole('textbox')
-//         .click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    await page.waitForTimeout(2000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'preview-temporal-edge-colour-change.png',
+    );
+});
 
-//     await page
-//         .locator('div')
-//         .filter({ hasText: /^Hex$/ })
-//         .getByRole('textbox')
-//         .fill('F5A623');
-//     await page.getByRole('button', { name: 'save', exact: true }).click();
-//     await page.waitForTimeout(5000);
-//     expect(await page.screenshot()).toMatchSnapshot(
-//         'temporal-edge-colour-change.png',
-//     );
-// });
+test('Change colour of edge on timeline view', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
+
+    await page.getByLabel('Edge ID Ben->Pedro_meets_50').click();
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.waitForTimeout(5000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'temporal-edge-colour-change.png',
+    );
+    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+    await page.waitForTimeout(2000);
+});

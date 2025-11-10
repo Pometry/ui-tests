@@ -722,13 +722,12 @@ test('Preview edge colour changes', async ({ page }) => {
         .nth(1)
         .click({
             position: {
-                x: 394,
-                y: 206,
+                x: 392,
+                y: 209,
             },
         });
     await page.getByRole('tab', { name: 'Graph settings' }).click();
-    const dropdown = page.locator('#edge-layer-select');
-    await dropdown.click();
+    await page.locator('#edge-layer-select').click();
     await page.getByRole('option', { name: 'advises' }).click();
     await page
         .locator('div')
