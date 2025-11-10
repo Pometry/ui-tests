@@ -93,7 +93,6 @@ test('Temporal view hover over edges', async ({ page }) => {
 
 test('Pin node and highlight', async ({ page }) => {
     navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
-    //   await page.waitForSelector('text=Pedro');
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
