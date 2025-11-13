@@ -4,7 +4,6 @@ WORKDIR /app
 COPY ./package.json .
 COPY ./package-lock.json .
 RUN npm install
-RUN apt-get update --fix-missing 
 RUN npx playwright install --with-deps
 
 COPY ./playwright.config.ts .

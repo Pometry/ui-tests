@@ -93,7 +93,6 @@ test('Temporal view hover over edges', async ({ page }) => {
 
 test('Pin node and highlight', async ({ page }) => {
     navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
-    await page.waitForSelector('text=Pedro');
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
@@ -152,4 +151,51 @@ test('Highlight node from timeline view', async ({ page }) => {
         });
     await page.getByRole('button', { name: 'Node Statistics' }).click();
     await page.getByRole('row', { name: 'Node Type Person' }).isVisible();
+});
+
+test('Preview colour of edge on timeline view', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+
+    await page.getByLabel('Edge ID Ben->Pedro_meets_1679356800000').click();
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    await page.waitForTimeout(2000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'preview-temporal-edge-colour-change.png',
+    );
+});
+
+test('Change colour of edge on timeline view', async ({ page }) => {
+    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
+
+    await page.getByLabel('Edge ID Ben->Pedro_meets_50').click();
+    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .click();
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('F5A623');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForTimeout(5000);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'temporal-edge-colour-change.png',
+    );
+    await page.getByRole('button', { name: 'Reset To Default Style' }).click();
+    await page.waitForTimeout(2000);
 });

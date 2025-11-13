@@ -178,7 +178,7 @@ test('pin and unpin via right hand side menu button', async ({ page }) => {
         .first()
         .click();
     await page.getByRole('tab', { name: 'Pinned' }).click();
-    await page.getByRole('button', { name: 'Pedro Age' }).click();
+    await rows.first().click();
     await page.getByRole('button', { name: 'select merge strategy' }).click();
     await page.getByRole('menuitem', { name: 'Unpin Node' }).click();
     await expect(page.getByText('No pinned nodes.')).toBeVisible();

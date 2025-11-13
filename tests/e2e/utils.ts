@@ -121,7 +121,9 @@ export async function navigateToGraphPageBySearch(
     if (entity.type === 'node') {
         if (entity.nodeType === 'Person') {
             await page
-                .getByRole('button', { name: `${entity.nodeName} Age` })
+                .getByRole('button', {
+                    name: `${entity.nodeName} Properties: Age`,
+                })
                 .dblclick();
         } else if (entity.nodeType === 'Company') {
             await page
@@ -139,6 +141,21 @@ export async function navigateToGraphPageBySearch(
     }
 
     await waitForLayoutToFinish(page);
+}
+
+export async function navigateToSavedGraphBySavedGraphsTable(
+    page: Page,
+    folderName: string,
+    graphName: string,
+) {
+    await page.goto('/saved-graphs');
+    await page
+        .getByRole('row', { name: new RegExp(`^${folderName}$`) })
+        .click();
+    await page
+        .getByRole('cell', { name: new RegExp(`^${graphName}$`, 'i') })
+        .dblclick();
+    await expect(page.getByRole('progressbar')).toBeHidden();
 }
 
 export async function selectLayout(
@@ -165,17 +182,4 @@ export async function waitForLayoutToFinish(
     });
     // this extra timeout is to account for the animation
     await page.waitForTimeout(2000);
-}
-
-export async function navigateToSavedGraphBySavedGraphsTable(
-    page: Page,
-    folderName: string,
-    graphName: string,
-) {
-    await page.goto('/saved-graphs');
-    await page
-        .getByRole('row', { name: new RegExp(`^${folderName}$`) })
-        .click();
-    await page.getByRole('cell', { name: graphName }).dblclick();
-    await page.waitForSelector('text=Ben');
 }
