@@ -191,11 +191,11 @@ test('Change colour of edge on timeline view', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('F5A623');
-    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(5000);
     expect(await page.screenshot()).toMatchSnapshot(
         'temporal-edge-colour-change.png',
     );
-    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+    await page.getByRole('button', { name: 'Reset To Default Style' }).click();
     await page.waitForTimeout(2000);
 });

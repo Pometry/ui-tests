@@ -568,12 +568,14 @@ test('Change colour and size of node', async ({ page }) => {
         .getByRole('textbox')
         .fill('BD10E0');
     await page.getByPlaceholder('Node size').fill('30');
-    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(3000);
     expect(await page.screenshot()).toMatchSnapshot(
         'node-colour-size-change.png',
     );
-    await page.getByRole('button', { name: 'clear-individual-style' }).click();
+    await page
+        .getByRole('button', { name: 'Clear Individual Node Style' })
+        .click();
     await page.waitForTimeout(2000);
 });
 
@@ -609,12 +611,12 @@ test('Change colour of edge by layer dropdown', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('F5A623');
-    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(5000);
     expect(await page.screenshot()).toMatchSnapshot(
         'edge-colour-change-layer-dropdown.png',
     );
-    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+    await page.getByRole('button', { name: 'Reset To Default Style' }).click();
 
     await page.waitForTimeout(2000);
 });
@@ -638,12 +640,14 @@ test('Change colour and size of node by type', async ({ page }) => {
         .getByRole('textbox')
         .fill('D0021B');
     await page.getByPlaceholder('Node size').fill('30');
-    await page.getByRole('button', { name: 'save', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(2000);
     expect(await page.screenshot()).toMatchSnapshot(
         'node-type-colour-size-change.png',
     );
-    await page.getByRole('button', { name: 'reset-to-default-style' }).click();
+    await page
+        .getByRole('button', { name: 'Reset To Default Type Style' })
+        .click();
     await page.waitForTimeout(2000);
 });
 
