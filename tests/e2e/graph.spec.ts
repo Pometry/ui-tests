@@ -325,8 +325,8 @@ test('Expand shared neighbours by floating actions button', async ({
         .nth(1)
         .click({
             position: {
-                x: 395,
-                y: 315,
+                x: 400,
+                y: 310,
             },
         });
 
@@ -336,7 +336,7 @@ test('Expand shared neighbours by floating actions button', async ({
         .click({
             modifiers: ['Shift'],
             position: {
-                x: 324,
+                x: 330,
                 y: 105,
             },
         });
