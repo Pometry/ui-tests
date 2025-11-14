@@ -92,7 +92,7 @@ test('Temporal view hover over edges', async ({ page }) => {
 });
 
 test('Pin node and highlight', async ({ page }) => {
-    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
@@ -133,7 +133,7 @@ test('Zoom into timeline view', async ({ page }) => {
 });
 
 test('Highlight node from timeline view', async ({ page }) => {
-    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     await page
         .locator('g')
         .filter({ hasText: /^Ben$/ })
@@ -154,7 +154,7 @@ test('Highlight node from timeline view', async ({ page }) => {
 });
 
 test('Preview colour of edge on timeline view', async ({ page }) => {
-    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
 
     await page.getByLabel('Edge ID Ben->Pedro_meets_1679356800000').click();
     await page.getByRole('tab', { name: 'Graph settings' }).click();
@@ -176,7 +176,7 @@ test('Preview colour of edge on timeline view', async ({ page }) => {
 });
 
 test('Change colour of edge on timeline view', async ({ page }) => {
-    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
 
     await page.getByLabel('Edge ID Ben->Pedro_meets_50').click();
     await page.getByRole('tab', { name: 'Graph settings' }).click();

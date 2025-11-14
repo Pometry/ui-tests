@@ -76,7 +76,7 @@ test('Highlight founds then transfers', async ({ page }) => {
 
 test('Test layouts', async ({ page }) => {
     test.setTimeout(60000);
-    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
 
     // The extra timeout here helps to make the next line more consistent
     await waitForLayoutToFinish(page, 3000);
@@ -99,7 +99,7 @@ test('Test layouts', async ({ page }) => {
 });
 
 test('Zoom in, zoom out, fit view button', async ({ page }) => {
-    navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
 
     await page.getByRole('button', { name: 'Zoom in' }).click();
     await waitForLayoutToFinish(page);
@@ -327,8 +327,8 @@ test('Expand shared neighbours by floating actions button', async ({
         .nth(1)
         .click({
             position: {
-                x: 395,
-                y: 315,
+                x: 415,
+                y: 310,
             },
         });
 
@@ -338,7 +338,7 @@ test('Expand shared neighbours by floating actions button', async ({
         .click({
             modifiers: ['Shift'],
             position: {
-                x: 324,
+                x: 310,
                 y: 105,
             },
         });
