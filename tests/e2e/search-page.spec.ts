@@ -304,7 +304,6 @@ test('Delete condition in query builder', async ({ page }) => {
 });
 
 test('is, is not condition statements in query builder', async ({ page }) => {
-    test.setTimeout(60000);
     await searchForEntity(page, {
         type: 'node',
         nodeType: 'Person',
