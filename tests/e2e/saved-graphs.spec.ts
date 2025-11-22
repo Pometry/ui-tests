@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForLayoutToFinish } from './utils';
 
 test('Saved graphs table is visible', async ({ page }) => {
     await page.goto('/saved-graphs');
@@ -128,13 +129,13 @@ test('Open and close accordions on right hand side panel and open graph from min
     const table = page.getByRole('table');
     await expect(table).toBeVisible();
     await page.getByRole('row', { name: /^vanilla$/ }).click();
-    const firstRow = table.locator('tbody tr').first();
-    await firstRow.click();
+    await page.getByRole('cell', { name: 'event' }).click();
     await page.getByRole('button', { name: 'Properties' }).click();
     await expect(page.getByText('Namespace')).not.toBeVisible();
     await page.getByRole('button', { name: 'Properties' }).click();
     await expect(page.getByText('Namespace')).toBeVisible();
     await page.getByRole('button', { name: 'Open' }).nth(1).click();
+    await waitForLayoutToFinish(page);
     await expect(page).toHaveURL(
         /\/graph\?graphSource=vanilla%2Fevent&initialNodes=%5B%5D/,
     );

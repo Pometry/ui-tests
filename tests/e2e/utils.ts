@@ -23,7 +23,8 @@ export async function fillInCondition(
         const input = page.getByPlaceholder('Value');
         await input.focus();
         await input.fill(condition.value);
-        await input.press('Tab'); // tab is required for blur events
+        await input.blur();
+        await page.waitForTimeout(1000); // This timeout can help tests be more stable
     }
 }
 
@@ -155,7 +156,8 @@ export async function navigateToSavedGraphBySavedGraphsTable(
     await page
         .getByRole('cell', { name: new RegExp(`^${graphName}$`, 'i') })
         .dblclick();
-    await expect(page.getByRole('progressbar')).toBeHidden();
+    await page.waitForSelector(`text=${folderName}`);
+    await waitForLayoutToFinish(page);
 }
 
 export async function selectLayout(
@@ -170,14 +172,22 @@ export async function selectLayout(
             exact: true,
         })
         .click();
-    await waitForLayoutToFinish(page, layoutTimeout);
+    await waitForLayoutToFinish(page, undefined, layoutTimeout);
 }
 
 export async function waitForLayoutToFinish(
     page: Page,
+    queryTimeout?: number,
     layoutTimeout?: number,
 ) {
-    await expect(page.getByRole('progressbar')).toBeHidden({
+    await expect(
+        page.getByRole('progressbar', { name: 'Querying for graph...' }),
+    ).toBeHidden({
+        timeout: queryTimeout,
+    });
+    await expect(
+        page.getByRole('progressbar', { name: 'Computing layout...' }),
+    ).toBeHidden({
         timeout: layoutTimeout,
     });
     // this extra timeout is to account for the animation
