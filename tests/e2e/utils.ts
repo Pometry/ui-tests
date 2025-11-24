@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export async function fillInCondition(
     page: Page,
@@ -155,8 +155,8 @@ export async function navigateToSavedGraphBySavedGraphsTable(
         .click();
     await page
         .getByRole('cell', { name: new RegExp(`^${graphName}$`, 'i') })
-        .dblclick();
-    await page.waitForSelector(`text=${folderName}`);
+        .click();
+    await page.getByRole('link', { name: 'Open' }).click();
     await waitForLayoutToFinish(page);
 }
 
@@ -192,4 +192,42 @@ export async function waitForLayoutToFinish(
     });
     // this extra timeout is to account for the animation
     await page.waitForTimeout(2000);
+}
+
+export async function dragSlider({
+    page,
+    slider,
+    root,
+    sliderPosition,
+}: {
+    page: Page;
+    slider: Locator;
+    root: Locator;
+    sliderPosition: number;
+}) {
+    const rootOffsetWidth = (await root.boundingBox())?.width;
+    if (rootOffsetWidth === undefined) {
+        throw Error('Could not get slider root offset!');
+    }
+    if (sliderPosition < 0 || sliderPosition > 1) {
+        throw Error(
+            'Provide a position to drag the slider to between 0 and 1.',
+        );
+    }
+    await slider.dragTo(root, {
+        force: true,
+        targetPosition: { x: rootOffsetWidth * sliderPosition, y: 0 },
+    });
+    await slider.dragTo(root, {
+        force: true,
+        targetPosition: { x: rootOffsetWidth * sliderPosition, y: 0 },
+    });
+    // sometimes the slider label stays and blocks elements below it, this tries
+    // to make it go away
+    await page.mouse.move(0, 0);
+}
+
+export async function toggleAccordion(page: Page, name: string) {
+    await page.getByRole('button', { name, exact: true }).click();
+    await page.waitForTimeout(500); // Accordion animation
 }

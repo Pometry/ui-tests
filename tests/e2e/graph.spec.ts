@@ -1,8 +1,10 @@
 import { expect, Page, test } from '@playwright/test';
 import {
+    dragSlider,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
     selectLayout,
+    toggleAccordion,
     waitForLayoutToFinish,
 } from './utils';
 
@@ -684,6 +686,245 @@ test('Preview edge colour changes', async ({ page }) => {
         .fill('F5A623');
     expect(await page.screenshot()).toMatchSnapshot(
         'preview-edge-colour-change-layer-dropdown.png',
+    );
+});
+
+test('Layout Customizer Default Advanced Options', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+    await changeTab(page, 'Layout');
+
+    await toggleAccordion(page, 'Advanced Options');
+
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'layout-customizer-default.png',
+    );
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Nodes start repelling each'),
+        root: page.getByLabel('Collision Radius Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('The strength with which the'),
+        root: page.getByLabel('Collision Strength Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('The ideal edge length'),
+        root: page.getByLabel('Link Distance Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('The strength of the link'),
+        root: page.getByLabel('Link Strength Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('A negative force represents "'),
+        root: page.getByLabel('Many-Body Force Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('The minimum/maximum distance').first(),
+        root: page.getByLabel('Many-Body Range Slider Container'),
+        sliderPosition: 0.2,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('The minimum/maximum distance').nth(1),
+        root: page.getByLabel('Many-Body Range Slider Container'),
+        sliderPosition: 0.8,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Force pulls nodes towards'),
+        root: page.getByLabel('Center Force Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Strength of the radial force'),
+        root: page.getByLabel('Radial force strength Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Radius of the radial force'),
+        root: page.getByLabel('Radial force radius Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await page
+        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'layout-customizer-default-all-changed.png',
+    );
+});
+
+test('Layout Customizer Default Pre-layout', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+    await changeTab(page, 'Layout');
+
+    await toggleAccordion(page, 'Pre-layout Advanced Options');
+
+    await page.getByRole('checkbox', { name: 'Use Clockwise' }).check();
+    await page
+        .getByRole('checkbox', { name: 'Maintain equidistant rings' })
+        .check();
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Used for collision detection'),
+        root: page.getByLabel('Node size (diameter) Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Minimum spacing between rings'),
+        root: page.getByLabel('Node spacing Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await page.getByRole('checkbox', { name: 'Prevent overlap' }).check();
+    await dragSlider({
+        page,
+        slider: page.getByLabel('The angle (in radians) to'),
+        root: page.getByLabel('Start Angle (pi radians) Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel(
+            'The angle difference between the first and last node in the same layer',
+        ),
+        root: page.getByLabel('Sweep Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await page
+        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'layout-customizer-prelayout-all-changed.png',
+    );
+});
+
+test('Layout Customizer can change to concentric layout', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+    await changeTab(page, 'Layout');
+
+    await page.getByRole('combobox', { name: 'Layout Algorithm' }).click();
+    await page.getByRole('option', { name: 'Concentric Layout' }).click();
+
+    await toggleAccordion(page, 'Advanced Options');
+
+    await page.getByRole('checkbox', { name: 'Use Clockwise' }).check();
+    await page
+        .getByRole('checkbox', { name: 'Maintain equidistant rings' })
+        .check();
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Used for collision detection'),
+        root: page.getByLabel('Node size (diameter) Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Minimum spacing between rings'),
+        root: page.getByLabel('Node spacing Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel(
+            'The angle (in radians) to start laying out nodes',
+        ),
+        root: page.getByLabel('Start Angle (pi radians) Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel(
+            'The angle difference between the first and last node in the same layer',
+        ),
+        root: page.getByLabel('Sweep Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await page
+        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    await fitView(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'layout-customizer-concentric-all-changed.png',
+    );
+});
+
+test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+    await changeTab(page, 'Layout');
+
+    await page.getByRole('combobox', { name: 'Pre-layout' }).click();
+    await page.getByRole('option', { name: 'Hierarchical TD Layout' }).click();
+
+    await toggleAccordion(page, 'Pre-layout Advanced Options');
+
+    await page.getByRole('checkbox', { name: 'Invert' }).check();
+    await page.getByRole('combobox', { name: 'Alignment' }).click();
+    await page.waitForTimeout(200); // select animation
+    await page.getByRole('option', { name: 'Upper Right' }).click();
+    await page.waitForTimeout(200); // select animation
+    await dragSlider({
+        page,
+        slider: page.getByLabel("For TB or BT, it's the horizontal spacing"),
+        root: page.getByLabel('Node separation (px) Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await dragSlider({
+        page,
+        slider: page.getByLabel("For TB or BT, it's the vertical spacing"),
+        root: page.getByLabel('Rank separation (px) Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await page.getByRole('combobox', { name: 'Ranking algorithm' }).click();
+    await page.waitForTimeout(200); // select animation
+    await page.getByRole('option', { name: 'tight-tree' }).click();
+    await page.waitForTimeout(200); // select animation
+    await dragSlider({
+        page,
+        slider: page.getByLabel('Size of node'),
+        root: page.getByLabel('Node size Slider Container'),
+        sliderPosition: 0.5,
+    });
+    await page
+        .getByRole('checkbox', { name: 'Retain edge control points' })
+        .check();
+    await page
+        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'layout-customizer-prelayout-dagre-all-changed.png',
     );
 });
 
