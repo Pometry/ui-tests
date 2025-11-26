@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 import { waitForLayoutToFinish } from './utils';
 
 test('Saved graphs table is visible', async ({ page }) => {
@@ -19,8 +19,7 @@ test('Saved graphs table is visible', async ({ page }) => {
 test('Change rows per page to 5 in table and check pagination', async ({
     page,
 }) => {
-    await page.goto('/saved-graphs');
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
+    await navigateToSavedGraphsFolder(page, 'vanilla');
     await page.getByRole('combobox').click();
     await page.getByRole('option', { exact: true, name: '5' }).click();
     const rows = page.locator('table tbody tr');
@@ -36,9 +35,7 @@ test('Change rows per page to 5 in table and check pagination', async ({
 });
 
 test('Row sorting on saved graphs table by columns', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    const table = page.getByRole('table');
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
+    const table = await navigateToSavedGraphsFolder(page, 'vanilla');
     //test Name
     const nameHeader = table.getByRole('columnheader', { name: 'Name' });
     await nameHeader.click();
@@ -90,11 +87,7 @@ test('Row sorting on saved graphs table by columns', async ({ page }) => {
 });
 
 test('Open graph by double clicking row', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    const table = page.getByRole('table');
-    await expect(table).toBeVisible();
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
-    await page.waitForLoadState('networkidle');
+    const table = await navigateToSavedGraphsFolder(page, 'vanilla');
     const firstRow = table.locator('tbody tr').first();
     await firstRow.dblclick();
     await expect(page).toHaveURL(
@@ -103,10 +96,7 @@ test('Open graph by double clicking row', async ({ page }) => {
 });
 
 test('Open graph by clicking open button on rhs panel', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    const table = page.getByRole('table');
-    await expect(table).toBeVisible();
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
+    const table = await navigateToSavedGraphsFolder(page, 'vanilla');
     await table.locator('tbody tr').first().click();
     await page.getByText('vanilla/event').isVisible();
     await page.getByText('Namespace').isVisible();
@@ -125,10 +115,7 @@ test('Open graph by clicking open button on rhs panel', async ({ page }) => {
 test('Open and close accordions on right hand side panel and open graph from minimap preview', async ({
     page,
 }) => {
-    await page.goto('/saved-graphs');
-    const table = page.getByRole('table');
-    await expect(table).toBeVisible();
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
+    await navigateToSavedGraphsFolder(page, 'vanilla');
     await page.getByRole('cell', { name: 'event' }).click();
     await page.getByRole('button', { name: 'Properties' }).click();
     await expect(page.getByText('Namespace')).not.toBeVisible();
@@ -144,10 +131,7 @@ test('Open and close accordions on right hand side panel and open graph from min
 test('Search saved graphs table, clear search and hide search', async ({
     page,
 }) => {
-    await page.goto('/saved-graphs');
-    const table = page.getByRole('table');
-    await expect(table).toBeVisible();
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
+    const table = await navigateToSavedGraphsFolder(page, 'vanilla');
     await page.getByRole('button', { name: 'Show/Hide search' }).click();
     const searchInput = page.getByPlaceholder('Search saved graphs');
     await searchInput.fill('event');
@@ -161,11 +145,7 @@ test('Search saved graphs table, clear search and hide search', async ({
 });
 
 test('Filter by Columns', async ({ page }) => {
-    await page.goto('/saved-graphs');
-    const table = page.getByRole('table');
-    await expect(table).toBeVisible();
-    await page.getByRole('row', { name: /^vanilla$/ }).click();
-    await page.waitForLoadState('networkidle');
+    const table = await navigateToSavedGraphsFolder(page, 'vanilla');
     await page.getByRole('button', { name: 'Show/Hide filters' }).click();
     const filterNameInput = page.getByPlaceholder('Filter by Name');
     await filterNameInput.fill('event');
@@ -182,3 +162,32 @@ test('Filter by Columns', async ({ page }) => {
     await filterEdgeCountInput.fill('4');
     await expect(rows).toHaveCount(2);
 });
+
+test('Switching between previews', async ({ page }) => {
+    await navigateToSavedGraphsFolder(page, 'vanilla');
+    await page.getByRole('cell', { name: 'event', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'event-preview-first-click.png',
+    );
+    await page.getByRole('cell', { name: 'persistent', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    expect(await page.screenshot()).toMatchSnapshot(
+        'persistent-preview-first-click.png',
+    );
+    await page.getByRole('cell', { name: 'event', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    // We expect no difference between the first time we preview and the second time
+    expect(await page.screenshot()).toMatchSnapshot(
+        'event-preview-first-click.png',
+    );
+});
+
+async function navigateToSavedGraphsFolder(page: Page, folder: string) {
+    await page.goto('/saved-graphs');
+    const table = page.getByRole('table');
+    await expect(table).toBeVisible();
+    await page.getByRole('row', { name: folder, exact: true }).click();
+    await page.waitForLoadState('networkidle');
+    return table;
+}
