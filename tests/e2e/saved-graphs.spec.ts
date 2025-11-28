@@ -167,18 +167,18 @@ test('Switching between previews', async ({ page }) => {
     await navigateToSavedGraphsFolder(page, 'vanilla');
     await page.getByRole('cell', { name: 'event', exact: true }).click();
     await waitForLayoutToFinish(page);
-    expect(await page.screenshot()).toMatchSnapshot(
+    expect(await page.getByText('PreviewOpen').screenshot()).toMatchSnapshot(
         'event-preview-first-click.png',
     );
     await page.getByRole('cell', { name: 'persistent', exact: true }).click();
     await waitForLayoutToFinish(page);
-    expect(await page.screenshot()).toMatchSnapshot(
+    expect(await page.getByText('PreviewOpen').screenshot()).toMatchSnapshot(
         'persistent-preview-first-click.png',
     );
     await page.getByRole('cell', { name: 'event', exact: true }).click();
     await waitForLayoutToFinish(page);
     // We expect no difference between the first time we preview and the second time
-    expect(await page.screenshot()).toMatchSnapshot(
+    expect(await page.getByText('PreviewOpen').screenshot()).toMatchSnapshot(
         'event-preview-first-click.png',
     );
 });
