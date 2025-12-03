@@ -422,9 +422,7 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    const temporalView = await page
-        .locator('.css-gnkdhv-MuiPaper-root')
-        .boundingBox();
+    const temporalView = await page.locator('#temporal-view').boundingBox();
     await page.locator('canvas').nth(1).dblclick({
         position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
     });
