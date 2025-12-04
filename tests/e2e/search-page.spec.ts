@@ -292,11 +292,7 @@ test('Delete condition in query builder', async ({ page }) => {
         conditions: [{ name: 'ID', value: 'Pom' }],
     });
     await page.getByText('Nothing turned up!').isVisible();
-    await page
-        .locator(
-            '.MuiButtonBase-root.MuiIconButton-root.MuiIconButton-sizeMedium.css-g6vrc0-MuiButtonBase-root-MuiIconButton-root',
-        )
-        .click();
+    await page.getByLabel('Delete condition').click();
     await page.getByRole('button', { name: 'Search', exact: true }).click();
     await waitForLayoutToFinish(page);
     await expect(page.getByRole('table')).toBeVisible();

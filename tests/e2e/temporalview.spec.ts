@@ -1,5 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
 import { navigateToSavedGraphBySavedGraphsTable } from './utils';
+import assert from 'assert';
 
 async function setupGraphPage(
     page: Page,
@@ -117,19 +118,17 @@ test('Pin node and highlight', async ({ page }) => {
 test('Zoom into timeline view', async ({ page }) => {
     await setupGraphPage(page);
     await page.waitForSelector('text="Pometry"');
-    const element = page.locator(
-        '.MuiPaper-root.MuiPaper-elevation.MuiPaper-rounded.MuiPaper-elevation1.css-gnkdhv-MuiPaper-root',
-    );
+
+    const element = page.locator('#temporal-view');
     await expect(element).toBeVisible();
     const box = await element.boundingBox();
-    if (box !== null) {
-        const offsetX = box.width / 2;
-        const offsetY = box.height / 2;
+    assert(box !== null);
+    const offsetX = box.width / 2;
+    const offsetY = box.height / 2;
 
-        await page.mouse.move(box.x + offsetX, box.y + offsetY);
-        await page.mouse.wheel(0, -2000); // scroll up (zoom in)
-        await expect(page.getByText('Pedro')).toBeHidden();
-    }
+    await page.mouse.move(box.x + offsetX, box.y + offsetY);
+    await page.mouse.wheel(0, -2000); // scroll up (zoom in)
+    await expect(page.getByText('Pedro')).toBeHidden();
 });
 
 test('Highlight node from timeline view', async ({ page }) => {
@@ -192,7 +191,7 @@ test('Change colour of edge on timeline view', async ({ page }) => {
         .getByRole('textbox')
         .fill('F5A623');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(3_000);
     expect(await page.screenshot()).toMatchSnapshot(
         'temporal-edge-colour-change.png',
     );
