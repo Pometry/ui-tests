@@ -191,7 +191,7 @@ test('Change colour of edge on timeline view', async ({ page }) => {
         .getByRole('textbox')
         .fill('F5A623');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(3_000);
     expect(await page.screenshot()).toMatchSnapshot(
         'temporal-edge-colour-change.png',
     );
