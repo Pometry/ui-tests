@@ -1,6 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
-import { navigateToSavedGraphBySavedGraphsTable } from './utils';
 import assert from 'assert';
+import { navigateToSavedGraphBySavedGraphsTable } from './utils';
 
 async function setupGraphPage(
     page: Page,
