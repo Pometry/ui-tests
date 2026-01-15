@@ -29,12 +29,12 @@ const CANVAS_ELEMENT_POSITIONS = {
         },
         'single edge two nodes': [
             {
-                x: 415,
-                y: 310,
+                x: 450,
+                y: 305,
             },
             {
-                x: 310,
-                y: 105,
+                x: 270,
+                y: 110,
             },
         ],
         'pedro expanded': {
