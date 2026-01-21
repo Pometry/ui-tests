@@ -7,6 +7,8 @@ export default defineConfig({
     retries: 2,
     reporter: 'html', // We use blob on CI to enable sharding
     use: {
+        timezoneId: 'Europe/London',
+        locale: 'en-US',
         baseURL: process.env.UI_BASE_URL,
         trace: 'on-first-retry',
         video: 'on-first-retry',
