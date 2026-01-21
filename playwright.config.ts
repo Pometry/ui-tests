@@ -15,11 +15,12 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env'), quiet: true });
 export default defineConfig({
     testDir: 'tests/e2e',
     /* Run tests in files in parallel */
-    fullyParallel: true,
+    // fullyParallel: true,
+    workers: 1,
     // /* Fail the build on CI if you accidentally left test.only in the source code. */
-    // forbidOnly: !!process.env.CI,
+    forbidOnly: !!process.env.CI,
     // /* Retry on CI only */
-    retries: 3,
+    retries: 2,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     // We use blob on CI to enable sharding
     reporter: 'html',
