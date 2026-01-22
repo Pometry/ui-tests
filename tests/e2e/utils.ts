@@ -15,6 +15,8 @@ export async function fillInCondition(
             page.getByRole('option', { name: condition.op.new }),
         ).toBeVisible();
         await page.getByRole('option', { name: condition.op.new }).click();
+        // Wait for condition dropdown to close
+        await expect(page.locator('.MuiMenu-root')).toBeHidden();
         await expect(
             page.getByRole('combobox', { name: condition.op.new }),
         ).toBeVisible();
