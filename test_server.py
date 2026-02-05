@@ -69,7 +69,18 @@ def second_filler_graph(graph):
     )
 
     graph.add_node(
-        60, "Rabbit Inc", {"industry": "Agriculture", "founded": 2019}, "Company"
+        60, "Rabbit Inc", {
+            "industry": "Agriculture",
+            "founded": 2019,
+            "description":
+                """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce laoreet nibh tellus, et sagittis ex pulvinar nec. Aliquam pellentesque dolor a gravida tempus. Fusce tristique venenatis eros quis molestie. Phasellus nec sapien non orci pellentesque porta. Donec eu odio a mauris vestibulum porta. Praesent vitae nisl vitae sem interdum volutpat. Phasellus vitae dignissim neque, vulputate molestie justo. Mauris interdum, dui sed pharetra mollis, lacus tellus dapibus magna, nec porttitor felis justo ac lorem. Curabitur volutpat arcu risus, quis semper dolor accumsan id. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+                Etiam eu neque ligula. Nam blandit ante vitae tellus ullamcorper, ornare iaculis tortor dictum. Curabitur quis pulvinar ante. Nulla in rutrum lorem. Vivamus aliquet lectus massa, eu scelerisque tellus cursus vitae. Donec eget diam sapien. Nulla nisi dolor, molestie non interdum et, ultrices sed dui. Suspendisse vehicula, velit at mollis fringilla, sem enim congue neque, et viverra lectus nunc at massa. Etiam gravida risus non quam pellentesque pulvinar. Nulla rutrum turpis eros, sit amet sodales urna elementum sit amet. Nunc pulvinar nibh et velit congue, eget posuere augue iaculis. Vivamus turpis sem, consectetur ut dictum congue, volutpat eu sapien.
+                Interdum et malesuada fames ac ante ipsum primis in faucibus. Integer placerat dui ipsum, placerat molestie tellus blandit eget. Fusce malesuada ex ut mauris semper, nec rhoncus est pharetra. Donec ut velit quis diam dignissim tincidunt sed nec lectus. In bibendum mollis dolor id ultricies. Sed turpis justo, scelerisque sed erat non, volutpat consectetur ex. Etiam luctus bibendum pharetra. Maecenas eros dui, auctor a cursus eu, commodo et nisi. Etiam malesuada lacus ac suscipit mattis. Sed erat augue, bibendum at nisi vel, scelerisque volutpat lacus. Vivamus neque dui, sodales non leo quis, faucibus ultricies ex.
+                Vestibulum risus nulla, viverra dapibus lorem vel, euismod dignissim lectus. Sed molestie nisi a libero congue, nec lobortis diam suscipit. Donec consectetur sollicitudin imperdiet. Fusce vitae mollis erat, at placerat augue. Suspendisse eu placerat eros. Sed eros nulla, rhoncus non rutrum ut, rutrum dignissim dui. Cras hendrerit interdum velit, ornare pulvinar ipsum volutpat at.
+                Aliquam diam ipsum, feugiat eu ligula at, dignissim efficitur sapien. Vestibulum posuere iaculis egestas. Nunc non auctor dolor. Aenean ipsum nunc, imperdiet sit amet dolor a, vestibulum posuere nulla. Proin neque ligula, semper nec mi ut, sagittis placerat mauris. Nam sodales viverra dolor feugiat lobortis. Fusce scelerisque dui egestas, scelerisque lectus eget, dignissim mauris. Morbi eu orci at dolor bibendum volutpat. Duis congue, tellus quis euismod bibendum, mi justo posuere mauris, at sodales ante lorem sit amet nisl. Phasellus cursus pulvinar nunc sed suscipit. Ut lobortis gravida augue, vel gravida diam mollis vel. Maecenas ut libero viverra, ullamcorper nunc quis, volutpat neque. Ut accumsan suscipit justo, vitae ultrices sapien tincidunt non. In hac habitasse platea dictumst.
+                """
+        },
+        "Company"
     )
 
     graph.add_edge(

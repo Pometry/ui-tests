@@ -63,6 +63,10 @@ const CANVAS_ELEMENT_POSITIONS = {
         },
     },
     'new_folder/persistent_second_filler': {
+        'Rabbit Inc': {
+            x: 485,
+            y: 95,
+        },
         'Judy->Rabbit Inc': {
             x: 459,
             y: 151,
@@ -492,6 +496,27 @@ test('Click backspace to delete nodes', async ({ page }) => {
     await expect(page.getByText('Hamza')).toBeHidden();
     await expect(page.getByText('Pedro')).toBeVisible();
     await expect(page.getByText('Ben')).toBeVisible();
+});
+
+test('RHS Selected properties has max height for table cells', async ({
+    page,
+}) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'new_folder',
+        'second_filler',
+    );
+    await changeTab(page, 'Selected');
+    await page.locator('canvas').nth(1).click({
+        position:
+            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_second_filler'][
+                'Rabbit Inc'
+            ],
+    });
+    // Expect that table cells have a max height that hides the majority of the
+    // text such that you can still see elements below the properties, such as
+    // Direct Connections.
+    await expect(page.getByText('Direct Connections')).toBeVisible();
 });
 
 test('Change colour and size of node', async ({ page }) => {
