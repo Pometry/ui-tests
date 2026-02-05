@@ -926,6 +926,26 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
     );
 });
 
+test('Brush select on main canvas works from first click', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+
+    await page.keyboard.down('Shift');
+    await page.mouse.move(630, 100);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    await page.mouse.move(120, 330);
+    await page.mouse.up();
+    await page.keyboard.up('Shift');
+
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'brush-select-first-click.png',
+    );
+});
+
 test('catch console logs and errors', async ({ page }) => {
     const consoleErrors: string[] = [];
     const consoleLogs: string[] = [];
