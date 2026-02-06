@@ -476,6 +476,38 @@ test('Click and deselect by floating actions', async ({ page }) => {
     });
 });
 
+test('Select all from menu and via shortcut', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await page.waitForTimeout(500);
+    await page.locator('canvas').nth(1).click();
+    await page.waitForTimeout(100);
+    await page.keyboard.down('Control');
+    await page.waitForTimeout(100);
+    await page.locator('canvas').nth(1).press('a');
+    await page.waitForTimeout(100);
+    await page.keyboard.up('Control');
+    await page.waitForTimeout(500);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'select-all-via-shortcut.png',
+    );
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Deselect all nodes', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'select-all-then-deselect-all.png',
+    );
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Select all nodes', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'select-all-via-menu.png',
+    );
+});
+
 test('Click backspace to delete nodes', async ({ page }) => {
     await navigateToGraphPageBySearch(page, {
         type: 'node',
