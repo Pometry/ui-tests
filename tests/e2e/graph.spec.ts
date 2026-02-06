@@ -64,7 +64,7 @@ const CANVAS_ELEMENT_POSITIONS = {
     },
     'new_folder/persistent_second_filler': {
         'Rabbit Inc': {
-            x: 485,
+            x: 430,
             y: 95,
         },
         'Judy->Rabbit Inc': {
@@ -504,7 +504,7 @@ test('RHS Selected properties has max height for table cells', async ({
     await navigateToSavedGraphBySavedGraphsTable(
         page,
         'new_folder',
-        'second_filler',
+        'persistent_second_filler',
     );
     await changeTab(page, 'Selected');
     await page.locator('canvas').nth(1).click({
