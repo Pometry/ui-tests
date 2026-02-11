@@ -5,7 +5,7 @@ export default defineConfig({
     workers: 1,
     forbidOnly: !!process.env.CI, // Fail the build on CI if you accidentally left test.only in the source code
     retries: 2,
-    reporter: 'html', // We use blob on CI to enable sharding
+    reporter: [['html', { open: 'on-failure', host: '0.0.0.0', port: 9323 }]],
     use: {
         timezoneId: 'Europe/London',
         locale: 'en-US',
