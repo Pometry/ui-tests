@@ -63,6 +63,10 @@ const CANVAS_ELEMENT_POSITIONS = {
         },
     },
     'new_folder/persistent_second_filler': {
+        'Rabbit Inc': {
+            x: 430,
+            y: 95,
+        },
         'Judy->Rabbit Inc': {
             x: 459,
             y: 151,
@@ -472,6 +476,38 @@ test('Click and deselect by floating actions', async ({ page }) => {
     });
 });
 
+test('Select all from menu and via shortcut', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await page.waitForTimeout(500);
+    await page.locator('canvas').nth(1).click();
+    await page.waitForTimeout(100);
+    await page.keyboard.down('Control');
+    await page.waitForTimeout(100);
+    await page.locator('canvas').nth(1).press('a');
+    await page.waitForTimeout(100);
+    await page.keyboard.up('Control');
+    await page.waitForTimeout(500);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'select-all-via-shortcut.png',
+    );
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Deselect all nodes', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'select-all-then-deselect-all.png',
+    );
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Select all nodes', exact: true })
+        .click();
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'select-all-via-menu.png',
+    );
+});
+
 test('Click backspace to delete nodes', async ({ page }) => {
     await navigateToGraphPageBySearch(page, {
         type: 'node',
@@ -492,6 +528,27 @@ test('Click backspace to delete nodes', async ({ page }) => {
     await expect(page.getByText('Hamza')).toBeHidden();
     await expect(page.getByText('Pedro')).toBeVisible();
     await expect(page.getByText('Ben')).toBeVisible();
+});
+
+test('RHS Selected properties has max height for table cells', async ({
+    page,
+}) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'new_folder',
+        'persistent_second_filler',
+    );
+    await changeTab(page, 'Selected');
+    await page.locator('canvas').nth(1).click({
+        position:
+            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_second_filler'][
+                'Rabbit Inc'
+            ],
+    });
+    // Expect that table cells have a max height that hides the majority of the
+    // text such that you can still see elements below the properties, such as
+    // Direct Connections.
+    await expect(page.getByText('Direct Connections')).toBeVisible();
 });
 
 test('Change colour and size of node', async ({ page }) => {
@@ -923,6 +980,26 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
         'layout-customizer-prelayout-dagre-all-changed.png',
+    );
+});
+
+test('Brush select on main canvas works from first click', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'persistent_filler',
+    );
+
+    await page.keyboard.down('Shift');
+    await page.mouse.move(630, 100);
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    await page.mouse.move(120, 330);
+    await page.mouse.up();
+    await page.keyboard.up('Shift');
+
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'brush-select-first-click.png',
     );
 });
 
