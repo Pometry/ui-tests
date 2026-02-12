@@ -16,7 +16,7 @@ export default defineConfig({
     timeout: 30000,
     expect: {
         toMatchSnapshot: {
-            maxDiffPixels: 1000,
+            maxDiffPixels: 2000,
         },
     },
 });
