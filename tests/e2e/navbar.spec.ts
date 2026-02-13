@@ -3,40 +3,49 @@ import { expect, test } from '@playwright/test';
 test('Page has title', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page).toHaveTitle('Pometry UI');
+    await expect(page).toHaveTitle('Search | Pometry');
 });
 
 test('Search page link works', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/saved-graphs');
 
-    await page.getByRole('button', { name: 'Search for a graph' }).click();
+    await page.getByRole('link', { name: 'Search', exact: true }).click();
+    await expect(page).toHaveTitle('Search | Pometry');
     await expect(page).toHaveURL(/\/search$/);
-    await expect(page.getByText('Search for entities')).toBeVisible();
+    await expect(page.getByText('Start Your Search')).toBeVisible();
 });
 
 test('Saved graphs page link works', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'List of saved graphs' }).click();
+    await page.getByRole('link', { name: 'Explorations', exact: true }).click();
     await expect(page).toHaveURL(/\/saved-graphs$/);
     await expect(
-        page.getByText(
-            'To see object details, please select an object in the graph canvas.',
-        ),
+        page.getByRole('button', {
+            name: 'new_folder FOLDER',
+        }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('button', {
+            name: 'vanilla FOLDER',
+        }),
     ).toBeVisible();
 });
 
 test('Home page link works', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/saved-graphs');
 
-    await page.locator('img[alt="Pometry Logo"]').nth(0).click();
+    await page.getByRole('link', { name: 'Pometry', exact: true }).click();
     await expect(page).toHaveURL(/\/search$/);
-    await expect(page.getByText('Search for entities')).toBeVisible();
+    await expect(page).toHaveTitle('Search | Pometry');
+    await expect(page.getByText('Start Your Search')).toBeVisible();
 });
 
 test('Playground link works', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'GraphQL Playground' }).click();
+    await page
+        .getByRole('link', { name: 'GraphQL Playground', exact: true })
+        .click();
     await expect(page).toHaveURL(/\/playground$/);
 });

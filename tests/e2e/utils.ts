@@ -8,18 +8,14 @@ export async function fillInCondition(
     },
 ) {
     if (condition.op !== undefined) {
-        await page
-            .getByRole('combobox', { name: condition.op.current })
-            .click();
+        await page.getByText(condition.op.current).click();
         await expect(
             page.getByRole('option', { name: condition.op.new }),
         ).toBeVisible();
         await page.getByRole('option', { name: condition.op.new }).click();
         // Wait for condition dropdown to close
         await expect(page.locator('.MuiMenu-root')).toBeHidden();
-        await expect(
-            page.getByRole('combobox', { name: condition.op.new }),
-        ).toBeVisible();
+        await expect(page.getByText(condition.op.new)).toBeVisible();
     }
     if (condition.value !== undefined) {
         const input = page.getByPlaceholder('Value');
@@ -69,15 +65,7 @@ export async function searchForEntity(
         await page.getByRole('option', { name: entity.nodeType }).click();
         await expect(page.getByText(entity.nodeType).first()).toBeVisible();
         for (const condition of entity.conditions ?? []) {
-            await page
-                .locator('div')
-                .filter({
-                    hasText: new RegExp(
-                        `^With the following conditions:${entity.nodeType}$`,
-                    ),
-                })
-                .getByRole('button')
-                .click();
+            await page.getByRole('button', { name: 'Add' }).click();
             await page.getByRole('menuitem', { name: condition.name }).click();
             await fillInCondition(page, condition);
         }
@@ -102,6 +90,8 @@ export async function searchForEntity(
         }
     }
     await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await expect(page.getByText('Start Your Search')).toBeHidden();
+    await expect(page.getByRole('progressbar')).toBeHidden();
 }
 
 export async function navigateToGraphPageBySearch(
@@ -125,25 +115,45 @@ export async function navigateToGraphPageBySearch(
         if (entity.nodeType === 'Person') {
             await page
                 .getByRole('button', {
-                    name: `${entity.nodeName} Properties: Age`,
+                    name: `${entity.nodeName} PERSON Age`,
                 })
                 .dblclick();
         } else if (entity.nodeType === 'Company') {
             await page
                 .getByRole('button', {
-                    name: `${entity.nodeName} No properties found`,
+                    name: `${entity.nodeName} COMPANY ID: ${entity.nodeName}`,
+                })
+                .dblclick();
+        } else if (entity.nodeType === 'None') {
+            await page
+                .getByRole('button', {
+                    name: `${entity.nodeName} ID: ${entity.nodeName}`,
                 })
                 .dblclick();
         }
     } else if (entity.type === 'edge') {
         await page
             .getByRole('button', {
-                name: `${entity.src} - ${entity.dst} Layers: ${entity.layers.join(',')}`,
+                name: `${entity.src} - ${entity.dst} EDGE ${entity.layers.join('·')}`,
             })
             .dblclick();
     }
 
     await waitForLayoutToFinish(page);
+}
+
+export async function clickSavedGraphsGraph(page: Page, graphName: string) {
+    await page
+        .getByRole('button', { name: new RegExp(`^${graphName} GRAPH`) })
+        .click();
+}
+
+export async function clickSavedGraphsFolder(page: Page, folderName: string) {
+    await page
+        .getByRole('button', {
+            name: new RegExp(`^${folderName} FOLDER Click to browse`),
+        })
+        .click();
 }
 
 export async function navigateToSavedGraphBySavedGraphsTable(
@@ -152,12 +162,8 @@ export async function navigateToSavedGraphBySavedGraphsTable(
     graphName: string,
 ) {
     await page.goto('/saved-graphs');
-    await page
-        .getByRole('row', { name: new RegExp(`^${folderName}$`) })
-        .click();
-    await page
-        .getByRole('cell', { name: new RegExp(`^${graphName}$`, 'i') })
-        .click();
+    await clickSavedGraphsFolder(page, folderName);
+    await clickSavedGraphsGraph(page, graphName);
     await page.getByRole('link', { name: 'Open' }).click();
     await waitForLayoutToFinish(page);
 }
@@ -194,6 +200,12 @@ export async function waitForLayoutToFinish(
     });
     // this extra timeout is to account for the animation
     await page.waitForTimeout(2000);
+}
+
+export async function openTimeline(page: Page) {
+    await page.getByRole('button', { name: 'Open timeline' }).click();
+    // wait for animation to finish
+    await page.waitForTimeout(300);
 }
 
 export async function dragSlider({

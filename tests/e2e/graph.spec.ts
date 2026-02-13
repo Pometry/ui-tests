@@ -3,8 +3,8 @@ import {
     dragSlider,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
+    openTimeline,
     selectLayout,
-    toggleAccordion,
     waitForLayoutToFinish,
 } from './utils';
 
@@ -24,42 +24,48 @@ export async function changeTab(page: Page, tabName: string) {
 const CANVAS_ELEMENT_POSITIONS = {
     'no graph': {
         'single node': {
-            x: 370,
-            y: 180,
+            x: 465,
+            y: 310,
         },
         'single edge two nodes': [
             {
-                x: 450,
-                y: 305,
+                x: 215,
+                y: 135,
             },
             {
-                x: 270,
-                y: 110,
+                x: 560,
+                y: 500,
             },
         ],
         'pedro expanded': {
             'hamza->pedro': {
-                x: 366,
-                y: 155,
+                x: 387,
+                y: 219,
             },
             pedro: {
-                x: 442,
-                y: 104,
+                x: 565,
+                y: 120,
             },
             hamza: {
-                x: 260,
-                y: 235,
+                x: 215,
+                y: 320,
+            },
+        },
+        'pedro expanded with timeline': {
+            hamza: {
+                x: 295,
+                y: 210,
             },
         },
     },
     'new_folder/persistent_filler': {
         pedro: {
-            x: 455,
-            y: 218,
+            x: 585,
+            y: 340,
         },
         ben: {
-            x: 331,
-            y: 212,
+            x: 355,
+            y: 325,
         },
     },
     'new_folder/persistent_second_filler': {
@@ -68,8 +74,8 @@ const CANVAS_ELEMENT_POSITIONS = {
             y: 95,
         },
         'Judy->Rabbit Inc': {
-            x: 459,
-            y: 151,
+            x: 572,
+            y: 205,
         },
     },
 };
@@ -77,28 +83,21 @@ const CANVAS_ELEMENT_POSITIONS = {
 test('Close right hand side panel button and open again', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
 
-    await page
-        .locator(
-            '.MuiButtonBase-root.MuiButton-root.MuiButton-text.MuiButton-textPrimary',
-        )
-        .nth(5)
-        .click();
-    await (await page.waitForSelector('text="Pedro"')).isHidden();
-    await page.getByText('Overview').isHidden();
+    await page.getByRole('button', { name: 'Collapse panel' }).click();
+    await expect(
+        page.getByRole('button', { name: 'Collapse panel' }),
+    ).toBeHidden();
 
-    await page
-        .locator(
-            '.MuiButtonBase-root.MuiButton-root.MuiButton-text.MuiButton-textPrimary',
-        )
-        .nth(5)
-        .click();
+    await page.getByRole('button', { name: 'Expand Overview' }).click();
 
-    await page.getByText('Overview').isVisible();
+    await expect(
+        page.getByRole('button', { name: 'Collapse panel' }),
+    ).toBeVisible();
 });
 
 test('Click save as button opens save as dialog', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
-    await page.locator('button:has-text("Save As")').click();
+    await page.getByRole('button', { name: 'Save graph as' }).click();
     await page.getByRole('button', { name: 'Cancel' }).waitFor();
     await expect(page.getByText('New Graph Name')).toBeVisible();
 
@@ -108,12 +107,14 @@ test('Click save as button opens save as dialog', async ({ page }) => {
 
 test('Highlight founds then transfers', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
-    await expect(page.getByRole('progressbar')).toBeHidden();
-    await page.getByRole('button', { name: 'Relationships' }).waitFor();
+    await waitForLayoutToFinish(page);
+    await openTimeline(page);
+    await page.getByText('Relationships').waitFor();
     await page
-        .getByRole('row', { name: 'transfers' })
-        .getByRole('button')
+        .getByText('transfers3')
+        .getByRole('button', { name: 'Highlight on graph' })
         .click();
+    await page;
     await expect(
         page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
     ).toHaveCSS('fill', 'rgb(117, 135, 72)');
@@ -123,7 +124,10 @@ test('Highlight founds then transfers', async ({ page }) => {
     await expect(
         page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
     ).toHaveCSS('fill', 'rgb(117, 135, 72)');
-    await page.getByRole('row', { name: 'founds' }).getByRole('button').click();
+    await page
+        .getByText('founds2')
+        .getByRole('button', { name: 'Highlight on graph' })
+        .click();
     await expect(
         page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
     ).toHaveCSS('fill', 'rgb(117, 135, 72)');
@@ -141,21 +145,21 @@ test('Test layouts', async ({ page }) => {
 
     // The extra timeout here helps to make the next line more consistent
     await waitForLayoutToFinish(page, 3000, 3000);
-    await selectLayout(page, 'Concentric Layout');
+    await selectLayout(page, 'Arrange nodes in concentric circles');
     expect(await page.screenshot()).toMatchSnapshot('concentric-layout.png');
-    await selectLayout(page, 'Force Based Layout');
+    await selectLayout(page, 'Force-directed layout algorithm');
 
     expect(await page.screenshot()).toMatchSnapshot('force-based-layout.png');
-    await selectLayout(page, 'Hierarchical TD Layout');
+    await selectLayout(page, 'Top-to-bottom hierarchical tree');
 
     expect(await page.screenshot()).toMatchSnapshot(
         'hierarchical-td-layout.png',
     );
-    await selectLayout(page, 'Hierarchical LR Layout');
+    await selectLayout(page, 'Left-to-right hierarchical tree');
     expect(await page.screenshot()).toMatchSnapshot(
         'hierarchical-lr-layout.png',
     );
-    await selectLayout(page, 'Default Layout');
+    await selectLayout(page, 'Physics-based layout with natural clustering');
     expect(await page.screenshot()).toMatchSnapshot('default-layout.png');
 });
 
@@ -183,9 +187,8 @@ test('Click on Pometry node in graph', async ({ page }) => {
     });
     await changeTab(page, 'Selected');
     await expect(page.getByRole('heading', { name: 'Pometry' })).toBeVisible();
-    await expect(
-        page.getByText('No properties found', { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText('PROPERTIES')).toBeHidden();
+    await expect(page.getByText('STATISTICS')).toBeVisible();
 });
 
 test('Click on Pedro node in graph', async ({ page }) => {
@@ -246,8 +249,7 @@ test('Double click expand node and delete by floating actions button', async ({
     await expect(page.getByRole('heading', { name: 'Pedro' })).toBeVisible();
     await page
         .getByRole('button', {
-            name: 'Delete selected node from current graph',
-            exact: true,
+            name: 'Delete selected (⌫)',
         })
         .click();
     await waitForLayoutToFinish(page);
@@ -256,7 +258,7 @@ test('Double click expand node and delete by floating actions button', async ({
         maxDiffPixelRatio: 0.01,
     });
     await changeTab(page, 'Overview');
-    await page.getByRole('button', { name: 'Undo', exact: true }).click();
+    await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
 
     await waitForLayoutToFinish(page);
     await page.locator('canvas').nth(1).dblclick({
@@ -264,6 +266,7 @@ test('Double click expand node and delete by floating actions button', async ({
     });
     await waitForLayoutToFinish(page);
 
+    await openTimeline(page);
     await expect(page.getByText('Ben')).toBeVisible();
     await expect(page.getByText('Hamza')).toBeVisible();
 });
@@ -286,11 +289,12 @@ test('Expand node by floating actions button', async ({ page }) => {
         .click();
     await page
         .getByRole('menuitem', {
-            name: 'Expand and show all nodes directly related to selected node',
+            name: 'Show all nodes directly connected to selection',
             exact: true,
         })
         .click();
-    await page.waitForSelector('text=Pedro');
+    await waitForLayoutToFinish(page);
+    await openTimeline(page);
     await expect(page.getByText('Ben')).toBeVisible();
     await expect(page.getByText('Hamza')).toBeVisible();
     await expect(page.getByText('Pedro')).toBeVisible();
@@ -314,11 +318,12 @@ test('Expand two-hop by floating actions button', async ({ page }) => {
         .click();
     await page
         .getByRole('menuitem', {
-            name: 'Expand Two-Hop',
+            name: 'Show nodes within two connections of selection',
             exact: true,
         })
         .click();
-    await page.waitForSelector('text=Pedro');
+    await waitForLayoutToFinish(page);
+    await openTimeline(page);
     await expect(page.getByText('Ben')).toBeVisible();
     await expect(page.getByText('Hamza')).toBeVisible();
     await expect(page.getByText('Pedro')).toBeVisible();
@@ -359,12 +364,12 @@ test('Expand shared neighbours by floating actions button', async ({
         .click();
     await page
         .getByRole('menuitem', {
-            name: 'Shared Neighbours',
+            name: 'Show nodes connected to all selected nodes',
             exact: true,
         })
         .click();
     await waitForLayoutToFinish(page);
-    await page.waitForSelector('text=Ben');
+    await openTimeline(page);
     await expect(page.getByText('Ben')).toBeVisible();
     await expect(page.getByText('Hamza')).toBeVisible();
     await expect(page.getByText('Pedro')).toBeVisible();
@@ -390,7 +395,7 @@ test('Click edge to reveal right hand side panel details', async ({ page }) => {
     });
     await page.waitForTimeout(100);
     await changeTab(page, 'Selected');
-    await page.getByRole('button', { name: 'Edge Statistics' }).click();
+    await page.getByRole('button', { name: 'EDGE STATISTICS' }).click();
     await expect(page.getByText('Madrid')).toBeVisible();
     await expect(page.getByText('Layer Names')).toBeVisible();
     await expect(page.getByText('Earliest Time')).toBeVisible();
@@ -412,9 +417,11 @@ test('Undo and redo in floating actions menu', async ({ page }) => {
         position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
     });
     await waitForLayoutToFinish(page);
-    await page.getByRole('button', { name: 'Undo', exact: true }).click();
-    await page.getByRole('button', { name: 'Redo', exact: true }).click();
-    await page.waitForSelector('text=Pedro');
+    await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    await page.getByRole('button', { name: 'Redo (⌘⇧Z)', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    await openTimeline(page);
     await expect(page.getByText('Ben')).toBeVisible();
     await expect(page.getByText('Hamza')).toBeVisible();
     await expect(page.getByText('Pedro')).toBeVisible();
@@ -426,7 +433,8 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    const temporalView = await page.locator('#temporal-view').boundingBox();
+    await waitForLayoutToFinish(page);
+    await openTimeline(page);
     await page.locator('canvas').nth(1).dblclick({
         position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
     });
@@ -439,9 +447,12 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
     });
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
-        .getByRole('menuitem', { name: 'Select all similar nodes' })
+        .getByRole('menuitem', {
+            name: 'Select all nodes with the same type as selection',
+        })
         .click();
     await waitForLayoutToFinish(page);
+    const temporalView = await page.locator('#temporal-view').boundingBox();
     if (temporalView) {
         expect(await page.screenshot({ clip: temporalView })).toMatchSnapshot(
             'selectsimilarnodes.png',
@@ -468,7 +479,9 @@ test('Click and deselect by floating actions', async ({ page }) => {
 
     await expect(page.getByText('Pedro').nth(0)).toBeVisible();
     await page.getByRole('button', { name: 'Selection' }).click();
-    await page.getByRole('menuitem', { name: 'Deselect all nodes' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
     await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('deselectnodes.png', {
         maxDiffPixels: 20000,
@@ -518,11 +531,13 @@ test('Click backspace to delete nodes', async ({ page }) => {
         position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
     });
     await waitForLayoutToFinish(page);
-    await page.waitForSelector('text="Pedro"');
+    await openTimeline(page);
     await fitView(page);
     await page.locator('canvas').nth(1).click({
         position:
-            CANVAS_ELEMENT_POSITIONS['no graph']['pedro expanded']['hamza'],
+            CANVAS_ELEMENT_POSITIONS['no graph'][
+                'pedro expanded with timeline'
+            ]['hamza'],
     });
     await page.keyboard.press('Backspace');
     await expect(page.getByText('Hamza')).toBeHidden();
@@ -562,7 +577,7 @@ test('Change colour and size of node', async ({ page }) => {
         position:
             CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['pedro'],
     });
-    await changeTab(page, 'Graph settings');
+    await changeTab(page, 'Styling');
     await page
         .locator('div')
         .filter({ hasText: /^Hex$/ })
@@ -574,15 +589,13 @@ test('Change colour and size of node', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('BD10E0');
-    await page.getByRole('spinbutton', { name: 'Node Size' }).fill('30');
+    await page.getByPlaceholder('Enter size').fill('30');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(3000);
     expect(await page.screenshot()).toMatchSnapshot(
         'node-colour-size-change.png',
     );
-    await page
-        .getByRole('button', { name: 'Clear Individual Node Style' })
-        .click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.waitForTimeout(2000);
 });
 
@@ -600,8 +613,9 @@ test('Change colour of edge by layer dropdown', async ({ page }) => {
                 'Judy->Rabbit Inc'
             ],
     });
-    await changeTab(page, 'Graph settings');
-    await page.getByRole('combobox', { name: 'Select Edge Layer' }).click();
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
     await page.getByRole('option', { name: 'advises' }).click();
     await page
         .locator('div')
@@ -615,11 +629,12 @@ test('Change colour of edge by layer dropdown', async ({ page }) => {
         .getByRole('textbox')
         .fill('F5A623');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await openTimeline(page);
     await page.waitForTimeout(5000);
     expect(await page.screenshot()).toMatchSnapshot(
         'edge-colour-change-layer-dropdown.png',
     );
-    await page.getByRole('button', { name: 'Reset To Default Style' }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
 
     await page.waitForTimeout(2000);
 });
@@ -627,8 +642,8 @@ test('Change colour and size of node by type', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await fitView(page);
 
-    await changeTab(page, 'Graph settings');
-    await page.getByRole('combobox', { name: 'Select Node Type' }).click();
+    await changeTab(page, 'Styling');
+    await page.getByText('Select Node Type').click();
     await page.getByRole('option', { name: 'Person' }).click();
     await page
         .locator('div')
@@ -641,15 +656,13 @@ test('Change colour and size of node by type', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('D0021B');
-    await page.getByRole('spinbutton', { name: 'Node Size' }).fill('30');
+    await page.getByPlaceholder('Enter size').fill('30');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(2000);
     expect(await page.screenshot()).toMatchSnapshot(
         'node-type-colour-size-change.png',
     );
-    await page
-        .getByRole('button', { name: 'Reset To Default Type Style' })
-        .click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.waitForTimeout(2000);
 });
 
@@ -660,8 +673,8 @@ test('Preview colour and size by type changes', async ({ page }) => {
         'second_filler',
     );
     await fitView(page);
-    await changeTab(page, 'Graph settings');
-    await page.getByRole('combobox', { name: 'Select Node Type' }).click();
+    await changeTab(page, 'Styling');
+    await page.getByText('Select Node Type').click();
     await page.getByRole('option', { name: 'Person' }).click();
     await page
         .locator('div')
@@ -674,7 +687,7 @@ test('Preview colour and size by type changes', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('D0021B');
-    await page.getByRole('spinbutton', { name: 'Node Size' }).fill('30');
+    await page.getByPlaceholder('Enter size').fill('30');
     await page.waitForTimeout(1000);
     expect(await page.screenshot()).toMatchSnapshot(
         'preview-node-type-colour-size-change.png',
@@ -692,7 +705,7 @@ test('Preview colour and size changes', async ({ page }) => {
         position:
             CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['ben'],
     });
-    await changeTab(page, 'Graph settings');
+    await changeTab(page, 'Styling');
     await page
         .locator('div')
         .filter({ hasText: /^Hex$/ })
@@ -704,7 +717,7 @@ test('Preview colour and size changes', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('BD10E0');
-    await page.getByRole('spinbutton', { name: 'Node Size' }).fill('30');
+    await page.getByPlaceholder('Enter size').fill('30');
     await page.waitForTimeout(1000);
     expect(await page.screenshot()).toMatchSnapshot(
         'preview-node-colour-size-change.png',
@@ -725,8 +738,8 @@ test('Preview edge colour changes', async ({ page }) => {
                 'Judy->Rabbit Inc'
             ],
     });
-    await changeTab(page, 'Graph settings');
-    await page.getByRole('combobox', { name: 'Select Edge Layer' }).click();
+    await changeTab(page, 'Styling');
+    await page.getByText('Select Edge Layer').click();
     await page.getByRole('option', { name: 'advises' }).click();
     await page
         .locator('div')
@@ -739,6 +752,9 @@ test('Preview edge colour changes', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('F5A623');
+    await openTimeline(page);
+    // Wait for the timeline to open fully
+    await page.waitForTimeout(500);
     expect(await page.screenshot()).toMatchSnapshot(
         'preview-edge-colour-change-layer-dropdown.png',
     );
@@ -751,8 +767,6 @@ test('Layout Customizer Default Advanced Options', async ({ page }) => {
         'persistent_filler',
     );
     await changeTab(page, 'Layout');
-
-    await toggleAccordion(page, 'Advanced Options');
 
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
         'layout-customizer-default.png',
@@ -818,7 +832,7 @@ test('Layout Customizer Default Advanced Options', async ({ page }) => {
         sliderPosition: 0.5,
     });
     await page
-        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .getByRole('button', { name: 'Apply Layout', exact: true })
         .click();
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
@@ -834,12 +848,8 @@ test('Layout Customizer Default Pre-layout', async ({ page }) => {
     );
     await changeTab(page, 'Layout');
 
-    await toggleAccordion(page, 'Pre-layout Advanced Options');
-
-    await page.getByRole('checkbox', { name: 'Use Clockwise' }).check();
-    await page
-        .getByRole('checkbox', { name: 'Maintain equidistant rings' })
-        .check();
+    await page.getByRole('checkbox', { name: 'Clockwise' }).check();
+    await page.getByRole('checkbox', { name: 'Equidistant rings' }).check();
     await dragSlider({
         page,
         slider: page.getByLabel('Used for collision detection'),
@@ -868,7 +878,7 @@ test('Layout Customizer Default Pre-layout', async ({ page }) => {
         sliderPosition: 0.5,
     });
     await page
-        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .getByRole('button', { name: 'Apply Layout', exact: true })
         .click();
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
@@ -884,15 +894,11 @@ test('Layout Customizer can change to concentric layout', async ({ page }) => {
     );
     await changeTab(page, 'Layout');
 
-    await page.getByRole('combobox', { name: 'Layout Algorithm' }).click();
+    await page.getByText('Default Layout').click();
     await page.getByRole('option', { name: 'Concentric Layout' }).click();
 
-    await toggleAccordion(page, 'Advanced Options');
-
-    await page.getByRole('checkbox', { name: 'Use Clockwise' }).check();
-    await page
-        .getByRole('checkbox', { name: 'Maintain equidistant rings' })
-        .check();
+    await page.getByRole('checkbox', { name: 'Clockwise' }).check();
+    await page.getByRole('checkbox', { name: 'Equidistant rings' }).check();
     await dragSlider({
         page,
         slider: page.getByLabel('Used for collision detection'),
@@ -922,7 +928,7 @@ test('Layout Customizer can change to concentric layout', async ({ page }) => {
         sliderPosition: 0.5,
     });
     await page
-        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .getByRole('button', { name: 'Apply Layout', exact: true })
         .click();
     await waitForLayoutToFinish(page);
     await fitView(page);
@@ -939,12 +945,10 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
     );
     await changeTab(page, 'Layout');
 
-    await page.getByRole('combobox', { name: 'Pre-layout' }).click();
+    await page.getByText('Concentric Layout').click();
     await page.getByRole('option', { name: 'Hierarchical TD Layout' }).click();
 
-    await toggleAccordion(page, 'Pre-layout Advanced Options');
-
-    await page.getByRole('checkbox', { name: 'Invert' }).check();
+    await page.getByRole('checkbox', { name: 'Invert direction' }).check();
     await page.getByRole('combobox', { name: 'Alignment' }).click();
     await page.waitForTimeout(200); // select animation
     await page.getByRole('option', { name: 'Upper Right' }).click();
@@ -971,11 +975,9 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
         root: page.getByLabel('Node size Slider Container'),
         sliderPosition: 0.5,
     });
+    await page.getByRole('checkbox', { name: 'Control points' }).check();
     await page
-        .getByRole('checkbox', { name: 'Retain edge control points' })
-        .check();
-    await page
-        .getByRole('button', { name: 'Rerun layout', exact: true })
+        .getByRole('button', { name: 'Apply Layout', exact: true })
         .click();
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(

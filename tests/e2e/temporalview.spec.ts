@@ -1,13 +1,18 @@
 import { expect, Page, test } from '@playwright/test';
 import assert from 'assert';
-import { navigateToSavedGraphBySavedGraphsTable } from './utils';
+import {
+    navigateToSavedGraphBySavedGraphsTable,
+    openTimeline,
+    waitForLayoutToFinish,
+} from './utils';
 
 async function setupGraphPage(
     page: Page,
     relativePath = 'graph?graphSource=vanilla/event&initialNodes=%5B%5D',
 ) {
     await page.goto(`/${relativePath}`);
-    await page.waitForSelector('text=Ben');
+    await waitForLayoutToFinish(page);
+    await openTimeline(page);
     return page;
 }
 
@@ -16,84 +21,79 @@ async function hoverEdgeAndExpectTooltip(
     selector: string,
     expectedText: string,
 ) {
+    const temporalViewIsHidden = await page
+        .locator('#temporal-view')
+        .isHidden();
+    if (temporalViewIsHidden) {
+        await openTimeline(page);
+        await page.waitForTimeout(500);
+    }
+
     const line = page.locator(selector).first();
     await expect(line).toHaveCount(1);
 
     const box = await line.boundingBox();
     if (!box) throw new Error(`Element ${selector} is not visible or rendered`);
-    await page.mouse.move(250, 200);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect(page.getByText(expectedText)).toBeVisible();
 }
 
 test('Close temporal view button and open again', async ({ page }) => {
     await setupGraphPage(page);
-    await page.waitForSelector('text=Ben');
-    await page
-        .locator(
-            '.MuiButtonBase-root.MuiButton-root.MuiButton-text.MuiButton-textPrimary',
-        )
-        .nth(6)
-        .click();
-
+    await page.getByRole('button', { name: 'Close timeline' }).click();
     await expect(page.locator('text="Ben"')).toBeHidden();
-
-    await page
-        .locator(
-            '.MuiButtonBase-root.MuiButton-root.MuiButton-text.MuiButton-textPrimary',
-        )
-        .nth(6)
-        .click();
-    await page.waitForSelector('text=Ben');
+    await openTimeline(page);
     await expect(page.locator('text="Ben"')).toBeVisible();
 });
 
 test('Temporal view hover over edges', async ({ page }) => {
     await setupGraphPage(page);
+
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(20) > line:nth-child(6)',
-        'Ben -> meets -> Hamza',
+        'EdgeBenHamzaLayermeets',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(19) > line:nth-child(6)',
-        'Ben -> meets -> Pedro',
+        'EdgeBenPedroLayermeets',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(22) > line:nth-child(6)',
-        'Hamza -> founds -> Pometry',
+        'EdgeHamzaPometryLayerfounds',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(23) > line:nth-child(6)',
-        'Hamza -> meets -> Pedro',
+        'EdgeHamzaPedroLayermeets',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(24) > line:nth-child(6)',
-        'Hamza -> meets -> Pedro',
+        'EdgeHamzaPedroLayermeets',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(25) > line:nth-child(6)',
-        'Hamza -> transfers -> Pedro',
+        'EdgeHamzaPedroLayertransfers',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(18) > line:nth-child(6)',
-        'Pedro -> transfers -> Hamza',
+        'EdgePedroHamzaLayertransfers',
     );
     await hoverEdgeAndExpectTooltip(
         page,
         'g:nth-child(21) > line:nth-child(6)',
-        'Ben -> transfers -> Hamza',
+        'EdgeBenHamzaLayertransfers',
     );
 });
 
 test('Pin node and highlight', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    await openTimeline(page);
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
@@ -133,14 +133,18 @@ test('Zoom into timeline view', async ({ page }) => {
 
 test('Highlight node from timeline view', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
+    await openTimeline(page);
     await page
         .locator('g')
         .filter({ hasText: /^Ben$/ })
         .locator('circle')
         .click();
     await page.getByRole('tab', { name: 'Selected' }).click();
-    await page.getByRole('button', { name: 'Node Statistics' }).click();
-    await page.getByRole('row', { name: 'Node Type Person' }).isVisible();
+    await expect(
+        page.getByRole('heading', { name: 'Ben', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText('PROPERTIES')).toBeVisible();
+    await expect(page.getByRole('row', { name: 'Age 30' })).toBeVisible();
     await page
         .locator('g')
         .filter({ hasText: /^Hamza$/ })
@@ -148,15 +152,19 @@ test('Highlight node from timeline view', async ({ page }) => {
         .click({
             modifiers: ['Shift'],
         });
-    await page.getByRole('button', { name: 'Node Statistics' }).click();
-    await page.getByRole('row', { name: 'Node Type Person' }).isVisible();
+    await expect(
+        page.getByRole('heading', { name: 'Hamza', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText('PROPERTIES')).toBeVisible();
+    await expect(page.getByRole('row', { name: 'Age 30' })).toBeVisible();
 });
 
 test('Preview colour of edge on timeline view', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await openTimeline(page);
 
     await page.getByLabel('Edge ID Ben->Pedro_meets_1679356800000').click();
-    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page.getByRole('tab', { name: 'Styling' }).click();
     await page
         .locator('div')
         .filter({ hasText: /^Hex$/ })
@@ -176,9 +184,10 @@ test('Preview colour of edge on timeline view', async ({ page }) => {
 
 test('Change colour of edge on timeline view', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
+    await openTimeline(page);
 
     await page.getByLabel('Edge ID Ben->Pedro_meets_50').click();
-    await page.getByRole('tab', { name: 'Graph settings' }).click();
+    await page.getByRole('tab', { name: 'Styling' }).click();
     await page
         .locator('div')
         .filter({ hasText: /^Hex$/ })
@@ -195,6 +204,6 @@ test('Change colour of edge on timeline view', async ({ page }) => {
     expect(await page.screenshot()).toMatchSnapshot(
         'temporal-edge-colour-change.png',
     );
-    await page.getByRole('button', { name: 'Reset To Default Style' }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.waitForTimeout(2000);
 });
