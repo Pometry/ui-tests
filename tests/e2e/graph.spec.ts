@@ -70,8 +70,8 @@ const CANVAS_ELEMENT_POSITIONS = {
     },
     'new_folder/persistent_second_filler': {
         'Rabbit Inc': {
-            x: 430,
-            y: 95,
+            x: 520,
+            y: 100,
         },
         'Judy->Rabbit Inc': {
             x: 572,
@@ -505,7 +505,7 @@ test('Select all from menu and via shortcut', async ({ page }) => {
     );
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
-        .getByRole('menuitem', { name: 'Deselect all nodes', exact: true })
+        .getByRole('menuitem', { name: 'Clear current selection', exact: true })
         .click();
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
@@ -513,7 +513,10 @@ test('Select all from menu and via shortcut', async ({ page }) => {
     );
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
-        .getByRole('menuitem', { name: 'Select all nodes', exact: true })
+        .getByRole('menuitem', {
+            name: 'Select every node in the graph',
+            exact: true,
+        })
         .click();
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
@@ -563,7 +566,7 @@ test('RHS Selected properties has max height for table cells', async ({
     // Expect that table cells have a max height that hides the majority of the
     // text such that you can still see elements below the properties, such as
     // Direct Connections.
-    await expect(page.getByText('Direct Connections')).toBeVisible();
+    await expect(page.getByText('Connections')).toBeVisible();
 });
 
 test('Change colour and size of node', async ({ page }) => {
