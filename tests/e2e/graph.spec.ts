@@ -252,6 +252,9 @@ test('Double click expand node and delete by floating actions button', async ({
             name: 'Delete selected (⌫)',
         })
         .click();
+    // Don't include the delete snapshot in tooltip (the ⌫ symbol can create
+    // font problems on the pipeline)
+    await page.mouse.move(0, 0);
     await waitForLayoutToFinish(page);
     expect(await page.screenshot()).toMatchSnapshot('deletednode.png', {
         maxDiffPixels: 100,
