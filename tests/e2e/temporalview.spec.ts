@@ -36,6 +36,7 @@ async function hoverEdgeAndExpectTooltip(
     if (!box) throw new Error(`Element ${selector} is not visible or rendered`);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect(page.getByText(expectedText)).toBeVisible();
+    await page.mouse.move(0, 0);
 }
 
 test('Close temporal view button and open again', async ({ page }) => {

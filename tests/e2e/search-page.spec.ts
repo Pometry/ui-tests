@@ -258,6 +258,14 @@ test('Search for relationships in certain date range', async ({ page }) => {
         .locator('button')
         .first()
         .click();
+    // Handle the narrower version of the date picker (which appears in tests
+    // sometimes for unknown reasons)
+    const okButtonVisible = await page
+        .getByRole('button', { name: 'OK' })
+        .isVisible();
+    if (okButtonVisible) {
+        await page.getByRole('button', { name: 'OK' }).click();
+    }
     await page.getByRole('combobox').filter({ hasText: 'Entity' }).click();
     await page.getByRole('option', { name: 'Relationship' }).click();
     await page.getByRole('textbox', { name: 'Source ID' }).click();
