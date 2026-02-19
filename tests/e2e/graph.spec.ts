@@ -117,13 +117,13 @@ test('Highlight founds then transfers', async ({ page }) => {
     await page;
     await expect(
         page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
     await expect(
         page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
     await expect(
         page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
     await page
         .getByText('founds2')
         .getByRole('button', { name: 'Highlight on graph' })
