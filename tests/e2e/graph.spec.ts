@@ -504,7 +504,7 @@ test('Select all from menu and via shortcut', async ({ page }) => {
     await page.keyboard.up('Control');
     await page.waitForTimeout(500);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all-via-shortcut.png',
+        'select-all.png',
     );
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
@@ -523,7 +523,7 @@ test('Select all from menu and via shortcut', async ({ page }) => {
         .click();
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all-via-menu.png',
+        'select-all.png',
     );
 });
 
