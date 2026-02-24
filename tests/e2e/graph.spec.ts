@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import {
     dragSlider,
+    fillInStyling,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
     openTimeline,
@@ -584,18 +585,7 @@ test('Change colour and size of node', async ({ page }) => {
             CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['pedro'],
     });
     await changeTab(page, 'Styling');
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .click();
-
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .fill('BD10E0');
-    await page.getByPlaceholder('Enter size').fill('30');
+    await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(3000);
     expect(await page.screenshot()).toMatchSnapshot(
@@ -623,17 +613,7 @@ test('Change colour of edge by layer dropdown', async ({ page }) => {
     await page.waitForTimeout(100);
     await page.getByText('Select Edge Layer').click();
     await page.getByRole('option', { name: 'advises' }).click();
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .click();
-
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .fill('F5A623');
+    await fillInStyling(page, { colourValue: 'F5A623' });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await openTimeline(page);
     await page.waitForTimeout(5000);
@@ -641,35 +621,23 @@ test('Change colour of edge by layer dropdown', async ({ page }) => {
         'edge-colour-change-layer-dropdown.png',
     );
     await page.getByRole('button', { name: 'Reset', exact: true }).click();
-
     await page.waitForTimeout(2000);
 });
+
 test('Change colour and size of node by type', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await fitView(page);
 
+    // This will fail if the server has not been restarted in between test runs,
+    // or if bugs cause the reset at the end of these style tests to not work.
+    expect(await page.screenshot()).toMatchSnapshot(
+        'vanilla-persistent-base-graph.png',
+    );
+
     await changeTab(page, 'Styling');
     await page.getByText('Select Node Type').click();
     await page.getByRole('option', { name: 'Person' }).click();
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .click();
-
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .fill('');
-
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .fill('D0021B');
-    await page.getByPlaceholder('Enter size').fill('');
-    await page.getByPlaceholder('Enter size').fill('30');
+    await fillInStyling(page, { colourValue: 'D0021B', size: 30 });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await page.waitForTimeout(2000);
     expect(await page.screenshot()).toMatchSnapshot(
@@ -689,18 +657,7 @@ test('Preview colour and size by type changes', async ({ page }) => {
     await changeTab(page, 'Styling');
     await page.getByText('Select Node Type').click();
     await page.getByRole('option', { name: 'Person' }).click();
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .click();
-
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .fill('D0021B');
-    await page.getByPlaceholder('Enter size').fill('30');
+    await fillInStyling(page, { colourValue: 'D0021B', size: 30 });
     await page.waitForTimeout(1000);
     expect(await page.screenshot()).toMatchSnapshot(
         'preview-node-type-colour-size-change.png',
@@ -719,18 +676,7 @@ test('Preview colour and size changes', async ({ page }) => {
             CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['ben'],
     });
     await changeTab(page, 'Styling');
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .click();
-
-    await page
-        .locator('div')
-        .filter({ hasText: /^Hex$/ })
-        .getByRole('textbox')
-        .fill('BD10E0');
-    await page.getByPlaceholder('Enter size').fill('30');
+    await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
     await page.waitForTimeout(1000);
     expect(await page.screenshot()).toMatchSnapshot(
         'preview-node-colour-size-change.png',

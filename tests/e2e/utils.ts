@@ -245,3 +245,28 @@ export async function toggleAccordion(page: Page, name: string) {
     await page.getByRole('button', { name, exact: true }).click();
     await page.waitForTimeout(500); // Accordion animation
 }
+
+// Assumes you have RHS open and are on the styling tab of a particular entity
+// (i.e. that entity is selected already or you are editing the styles of a node type)
+export async function fillInStyling(
+    page: Page,
+    { colourValue, size }: { colourValue?: string; size?: number },
+) {
+    // in Chromium, the input needs to be cleared first or it will append the
+    // value to the end of the existing value, which will then be ignored.
+    if (colourValue !== undefined) {
+        const colourInput = page
+            .locator('div')
+            .filter({ hasText: /^Hex$/ })
+            .getByRole('textbox');
+        await colourInput.click();
+        await colourInput.fill('');
+        await colourInput.fill(colourValue);
+    }
+
+    if (size !== undefined) {
+        const sizeInput = page.getByPlaceholder('Enter size');
+        await sizeInput.fill('');
+        await sizeInput.fill(size.toString());
+    }
+}
