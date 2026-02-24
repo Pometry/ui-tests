@@ -661,6 +661,12 @@ test('Change colour and size of node by type', async ({ page }) => {
         .locator('div')
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
+        .fill('');
+
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
         .fill('D0021B');
     await page.getByPlaceholder('Enter size').fill('30');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
