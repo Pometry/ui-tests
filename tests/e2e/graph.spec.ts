@@ -60,8 +60,8 @@ const CANVAS_ELEMENT_POSITIONS = {
     },
     'new_folder/persistent_filler': {
         pedro: {
-            x: 585,
-            y: 340,
+            x: 326,
+            y: 556,
         },
         ben: {
             x: 355,

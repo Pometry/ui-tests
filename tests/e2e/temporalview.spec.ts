@@ -194,7 +194,11 @@ test('Change colour of edge on timeline view', async ({ page }) => {
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .click();
-
+    await page
+        .locator('div')
+        .filter({ hasText: /^Hex$/ })
+        .getByRole('textbox')
+        .fill('');
     await page
         .locator('div')
         .filter({ hasText: /^Hex$/ })
