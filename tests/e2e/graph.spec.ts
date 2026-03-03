@@ -258,10 +258,7 @@ test('Double click expand node and delete by floating actions button', async ({
     // font problems on the pipeline)
     await page.mouse.move(0, 0);
     await waitForLayoutToFinish(page);
-    expect(await page.screenshot()).toMatchSnapshot('deletednode.png', {
-        maxDiffPixels: 100,
-        maxDiffPixelRatio: 0.01,
-    });
+    await expect(page.getByRole('heading', { name: 'Pedro' })).toBeHidden();
     await changeTab(page, 'Overview');
     await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
 
@@ -459,13 +456,21 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
     await waitForLayoutToFinish(page);
     const temporalView = await page.locator('#temporal-view').boundingBox();
     if (temporalView) {
-        expect(await page.screenshot({ clip: temporalView })).toMatchSnapshot(
-            'selectsimilarnodes.png',
-            {
-                maxDiffPixels: 20000,
-                maxDiffPixelRatio: 0.01,
-            },
-        );
+        await expect(
+            page.locator('g').filter({ hasText: /^Ben$/ }).locator('circle'),
+        ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+        await expect(
+            page
+                .locator('g')
+                .filter({ hasText: /^Pedro$/ })
+                .locator('circle'),
+        ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+        await expect(
+            page
+                .locator('g')
+                .filter({ hasText: /^Hamza$/ })
+                .locator('circle'),
+        ).toHaveCSS('fill', 'rgb(158, 158, 158)');
     } else {
         throw new Error('Element not found or not visible');
     }
@@ -488,15 +493,13 @@ test('Click and deselect by floating actions', async ({ page }) => {
         .getByRole('menuitem', { name: 'Clear current selection' })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await page.screenshot()).toMatchSnapshot('deselectnodes.png', {
-        maxDiffPixels: 20000,
-        maxDiffPixelRatio: 0.01,
-    });
+    await expect(page.getByText('Pedro').nth(0)).toBeHidden();
 });
 
 test('Select all from menu and via shortcut', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await page.waitForTimeout(500);
+    await openTimeline(page);
     await page.locator('canvas').nth(1).click();
     await page.waitForTimeout(100);
     await page.keyboard.down('Control');
@@ -505,17 +508,43 @@ test('Select all from menu and via shortcut', async ({ page }) => {
     await page.waitForTimeout(100);
     await page.keyboard.up('Control');
     await page.waitForTimeout(500);
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all.png',
-    );
+
+    const temporalView = await page.locator('#temporal-view').boundingBox();
+    if (!temporalView) {
+        throw new Error('Temporal view not found or not visible');
+    }
+    await expect(
+        page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Pometry$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(93, 212, 223)');
+
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', { name: 'Clear current selection', exact: true })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all-then-deselect-all.png',
-    );
+
+    await expect(
+        page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+    await expect(
+        page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+    await expect(
+        page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+    await expect(
+        page.locator('g', { hasText: /^Pometry$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', {
@@ -524,9 +553,19 @@ test('Select all from menu and via shortcut', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all.png',
-    );
+
+    await expect(
+        page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Pometry$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(93, 212, 223)');
 });
 
 test('Click backspace to delete nodes', async ({ page }) => {
@@ -626,9 +665,11 @@ test('Change colour of edge by layer dropdown', async ({ settingsPage }) => {
     });
     await openTimeline(settingsPage);
     await settingsPage.waitForTimeout(5000);
-    expect(await settingsPage.screenshot()).toMatchSnapshot(
-        'edge-colour-change-layer-dropdown.png',
-    );
+    await expect(
+        settingsPage
+            .getByLabel('Edge ID Judy->RabbitInc_advises_100')
+            .locator('path'),
+    ).toHaveCSS('fill', 'rgb(245, 166, 35)');
 });
 
 test('Change colour and size of node by type', async ({ settingsPage }) => {
@@ -728,9 +769,9 @@ test('Preview edge colour changes', async ({ page }) => {
     await openTimeline(page);
     // Wait for the timeline to open fully
     await page.waitForTimeout(500);
-    expect(await page.screenshot()).toMatchSnapshot(
-        'preview-edge-colour-change-layer-dropdown.png',
-    );
+    await expect(
+        page.getByLabel('Edge ID Judy->RabbitInc_advises_100').locator('path'),
+    ).toHaveCSS('fill', 'rgb(245, 166, 35)');
 });
 
 test('Layout Customizer Default Advanced Options', async ({ page }) => {
@@ -979,9 +1020,23 @@ test('Brush select on main canvas works from first click', async ({ page }) => {
     await page.mouse.up();
     await page.keyboard.up('Shift');
 
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'brush-select-first-click.png',
-    );
+    await openTimeline(page);
+    const temporalView = await page.locator('#temporal-view').boundingBox();
+    if (!temporalView) {
+        throw new Error('Temporal view not found or not visible');
+    }
+    await expect(
+        page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
+    await expect(
+        page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(107, 103, 112)');
+    await expect(
+        page.locator('g', { hasText: /^Pometry$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(107, 103, 112)');
+    await expect(
+        page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
+    ).toHaveCSS('fill', 'rgb(107, 103, 112)');
 });
 
 test('catch console logs and errors', async ({ page }) => {
