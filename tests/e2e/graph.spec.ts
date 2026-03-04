@@ -932,7 +932,8 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
     await page.getByRole('combobox', { name: 'Ranking algorithm' }).click();
     await page.getByRole('option', { name: 'tight-tree' }).click();
     await page.locator('ul[role="listbox"]').waitFor({ state: 'detached' });
-
+    // Needed to make the dragSlider work
+    await page.getByLabel('Size of node').click();
     await dragSlider({
         page,
         slider: page.getByLabel('Size of node'),
