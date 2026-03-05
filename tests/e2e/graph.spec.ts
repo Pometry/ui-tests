@@ -904,30 +904,35 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
     );
     await changeTab(page, 'Layout');
 
+    // TODO: make this into a reusable function for picking an option from a MUI dropdown like this (note this does not use timeouts)
     await page.getByText('Concentric Layout').click();
     await page.getByRole('option', { name: 'Hierarchical TD Layout' }).click();
+    await page.locator('ul[role="listbox"]').waitFor({ state: 'detached' }); // wait for MUI Select portal to be fully removed from DOM (close animation completes)
 
     await page.getByRole('checkbox', { name: 'Invert direction' }).check();
+
     await page.getByRole('combobox', { name: 'Alignment' }).click();
-    await page.waitForTimeout(200); // select animation
     await page.getByRole('option', { name: 'Upper Right' }).click();
-    await page.waitForTimeout(200); // select animation
+    await page.locator('ul[role="listbox"]').waitFor({ state: 'detached' });
+
     await dragSlider({
         page,
         slider: page.getByLabel("For TB or BT, it's the horizontal spacing"),
         root: page.getByLabel('Node separation (px) Slider Container'),
         sliderPosition: 0.5,
     });
+
     await dragSlider({
         page,
         slider: page.getByLabel("For TB or BT, it's the vertical spacing"),
         root: page.getByLabel('Rank separation (px) Slider Container'),
         sliderPosition: 0.5,
     });
+
     await page.getByRole('combobox', { name: 'Ranking algorithm' }).click();
-    await page.waitForTimeout(200); // select animation
     await page.getByRole('option', { name: 'tight-tree' }).click();
-    await page.waitForTimeout(200); // select animation
+    await page.locator('ul[role="listbox"]').waitFor({ state: 'detached' });
+
     await dragSlider({
         page,
         slider: page.getByLabel('Size of node'),
