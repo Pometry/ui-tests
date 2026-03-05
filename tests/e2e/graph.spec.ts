@@ -573,7 +573,7 @@ test('RHS Selected properties has max height for table cells', async ({
     await expect(page.getByText('Connections')).toBeVisible();
 });
 
-test('Change colour and size of node', async ({ page }) => {
+test('Change colour and size of individual node', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(
         page,
         'new_folder',
