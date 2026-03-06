@@ -928,6 +928,8 @@ test('Layout Customizer can use dagre for pre-layout', async ({ page }) => {
     await page.waitForTimeout(200); // select animation
     await page.getByRole('option', { name: 'tight-tree' }).click();
     await page.waitForTimeout(200); // select animation
+    // Needed to make the dragSlider work
+    await page.getByLabel('Size of node').click();
     await dragSlider({
         page,
         slider: page.getByLabel('Size of node'),
