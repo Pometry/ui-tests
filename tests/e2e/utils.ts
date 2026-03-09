@@ -1,5 +1,83 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+async function getNodePosition(
+    page: Page,
+    displayName: string,
+): Promise<{ x: number; y: number }> {
+    await page.waitForFunction(
+        (name) => {
+            const graph = (window as any).__G6_GRAPH__;
+            return !!(
+                graph &&
+                graph.getNodeData().some((n: any) => n.displayName === name)
+            );
+        },
+        displayName,
+        { timeout: 10000 },
+    );
+
+    const position = await page.evaluate((name) => {
+        const graph = (window as any).__G6_GRAPH__;
+        const node = graph
+            .getNodeData()
+            .find((n: any) => n.displayName === name);
+        if (!node) return null;
+        const canvasPoint = graph.getElementPosition(node.id);
+        const vp = graph.getViewportByCanvas(canvasPoint);
+        return { x: vp[0] as number, y: vp[1] as number };
+    }, displayName);
+    if (!position) {
+        throw new Error(
+            `Failed to get canvas position for node "${displayName}"`,
+        );
+    }
+    return position;
+}
+
+export async function clickOnNode(
+    page: Page,
+    displayName: string,
+    options?: { modifiers?: ('Shift' | 'Control' | 'Meta' | 'Alt')[] },
+) {
+    const position = await getNodePosition(page, displayName);
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({ position, modifiers: options?.modifiers });
+}
+
+export async function doubleClickOnNode(page: Page, displayName: string) {
+    const position = await getNodePosition(page, displayName);
+    await page.locator('canvas').nth(1).dblclick({ position });
+}
+
+/** Click the first node normally, then Shift-click the rest to multi-select. */
+export async function clickOnNodes(page: Page, displayNames: string[]) {
+    if (displayNames.length === 0) return;
+    await clickOnNode(page, displayNames[0]);
+    for (const name of displayNames.slice(1)) {
+        await clickOnNode(page, name, { modifiers: ['Shift'] });
+    }
+}
+
+/** Click the midpoint of an edge identified by its src and dst node display names. */
+export async function clickOnEdge(
+    page: Page,
+    srcDisplayName: string,
+    dstDisplayName: string,
+    options?: { modifiers?: ('Shift' | 'Control' | 'Meta' | 'Alt')[] },
+) {
+    const [src, dst] = await Promise.all([
+        getNodePosition(page, srcDisplayName),
+        getNodePosition(page, dstDisplayName),
+    ]);
+    const position = { x: (src.x + dst.x) / 2, y: (src.y + dst.y) / 2 };
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({ position, modifiers: options?.modifiers });
+}
+
 export async function fillInCondition(
     page: Page,
     condition: {
@@ -269,4 +347,24 @@ export async function fillInStyling(
         await sizeInput.fill('');
         await sizeInput.fill(size.toString());
     }
+type AppTestingState = {
+    selected: string[];
+    highlighted: {
+        nodes: string[] | undefined;
+        layer: string | undefined;
+    };
+    layout: unknown;
+    nodes: {
+        id: string;
+        displayName: string;
+        position: { x: number; y: number } | undefined;
+        colour: string | undefined;
+        size: number | undefined;
+    }[];
+};
+
+export async function getAppState(page: Page) {
+    return await page.evaluate(
+        () => (window as any).__APP_STATE__ as AppTestingState | undefined,
+    );
 }
