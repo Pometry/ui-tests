@@ -1,5 +1,6 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import assert from 'assert';
+import { test } from '../fixtures';
 import {
     navigateToSavedGraphBySavedGraphsTable,
     openTimeline,
@@ -183,28 +184,35 @@ test('Preview colour of edge on timeline view', async ({ page }) => {
     );
 });
 
-test('Change colour of edge on timeline view', async ({ page }) => {
-    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'filler');
-    await openTimeline(page);
+test('Change colour of edge on timeline view', async ({ settingsPage }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        settingsPage,
+        'vanilla',
+        'filler',
+    );
+    await openTimeline(settingsPage);
 
-    await page.getByLabel('Edge ID Ben->Pedro_meets_50').click();
-    await page.getByRole('tab', { name: 'Styling' }).click();
-    await page
+    await settingsPage.getByLabel('Edge ID Ben->Pedro_meets_50').click();
+    await settingsPage.getByRole('tab', { name: 'Styling' }).click();
+    await settingsPage
         .locator('div')
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .click();
 
-    await page
+    await settingsPage
         .locator('div')
         .filter({ hasText: /^Hex$/ })
         .getByRole('textbox')
         .fill('F5A623');
-    await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(3_000);
-    expect(await page.screenshot()).toMatchSnapshot(
+    await settingsPage
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+    await expect(settingsPage.getByText('Styling updated')).toBeVisible({
+        timeout: 5000,
+    });
+    await settingsPage.waitForTimeout(2000);
+    expect(await settingsPage.screenshot()).toMatchSnapshot(
         'temporal-edge-colour-change.png',
     );
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
 });

@@ -1,4 +1,5 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
+import { test } from '../fixtures';
 import {
     dragSlider,
     fillInStyling,
@@ -573,78 +574,91 @@ test('RHS Selected properties has max height for table cells', async ({
     await expect(page.getByText('Connections')).toBeVisible();
 });
 
-test('Change colour and size of individual node', async ({ page }) => {
+test('Change colour and size of individual node', async ({ settingsPage }) => {
     await navigateToSavedGraphBySavedGraphsTable(
-        page,
+        settingsPage,
         'new_folder',
         'persistent_filler',
     );
-    await fitView(page);
-    await page.locator('canvas').nth(1).click({
+    await fitView(settingsPage);
+    await settingsPage.locator('canvas').nth(1).click({
         position:
             CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['pedro'],
     });
-    await changeTab(page, 'Styling');
-    await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
-    await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(3000);
-    expect(await page.screenshot()).toMatchSnapshot(
+    await changeTab(settingsPage, 'Styling');
+    await fillInStyling(settingsPage, { colourValue: 'BD10E0', size: 30 });
+    await settingsPage
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+    await expect(settingsPage.getByText('Styling updated')).toBeVisible({
+        timeout: 5000,
+    });
+    await settingsPage.waitForTimeout(3000);
+    expect(await settingsPage.screenshot()).toMatchSnapshot(
         'node-colour-size-change.png',
     );
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
 });
 
-test('Change colour of edge by layer dropdown', async ({ page }) => {
+test('Change colour of edge by layer dropdown', async ({ settingsPage }) => {
     await navigateToSavedGraphBySavedGraphsTable(
-        page,
+        settingsPage,
         'new_folder',
         'persistent_second_filler',
     );
-    await fitView(page);
+    await fitView(settingsPage);
 
-    await page.locator('canvas').nth(1).click({
+    await settingsPage.locator('canvas').nth(1).click({
         position:
             CANVAS_ELEMENT_POSITIONS['new_folder/persistent_second_filler'][
                 'Judy->Rabbit Inc'
             ],
     });
-    await changeTab(page, 'Styling');
-    await page.waitForTimeout(100);
-    await page.getByText('Select Edge Layer').click();
-    await page.getByRole('option', { name: 'advises' }).click();
-    await fillInStyling(page, { colourValue: 'F5A623' });
-    await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await openTimeline(page);
-    await page.waitForTimeout(5000);
-    expect(await page.screenshot()).toMatchSnapshot(
+    await changeTab(settingsPage, 'Styling');
+    await settingsPage.waitForTimeout(100);
+    await settingsPage.getByText('Select Edge Layer').click();
+    await settingsPage.getByRole('option', { name: 'advises' }).click();
+    await fillInStyling(settingsPage, { colourValue: 'F5A623' });
+    await settingsPage
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+    await expect(settingsPage.getByText('Styling updated')).toBeVisible({
+        timeout: 5000,
+    });
+    await openTimeline(settingsPage);
+    await settingsPage.waitForTimeout(5000);
+    expect(await settingsPage.screenshot()).toMatchSnapshot(
         'edge-colour-change-layer-dropdown.png',
     );
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
 });
 
-test('Change colour and size of node by type', async ({ page }) => {
-    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
-    await fitView(page);
+test('Change colour and size of node by type', async ({ settingsPage }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        settingsPage,
+        'vanilla',
+        'persistent',
+    );
+    await fitView(settingsPage);
 
     // This will fail if the server has not been restarted in between test runs,
     // or if bugs cause the reset at the end of these style tests to not work.
-    expect(await page.screenshot()).toMatchSnapshot(
+    expect(await settingsPage.screenshot()).toMatchSnapshot(
         'vanilla-persistent-base-graph.png',
     );
 
-    await changeTab(page, 'Styling');
-    await page.getByText('Select Node Type').click();
-    await page.getByRole('option', { name: 'Person' }).click();
-    await fillInStyling(page, { colourValue: 'D0021B', size: 30 });
-    await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(2000);
-    expect(await page.screenshot()).toMatchSnapshot(
+    await changeTab(settingsPage, 'Styling');
+    await settingsPage.getByText('Select Node Type').click();
+    await settingsPage.getByRole('option', { name: 'Person' }).click();
+    await fillInStyling(settingsPage, { colourValue: 'D0021B', size: 30 });
+    await settingsPage
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+    await expect(settingsPage.getByText('Styling updated')).toBeVisible({
+        timeout: 5000,
+    });
+    await settingsPage.waitForTimeout(2000);
+    expect(await settingsPage.screenshot()).toMatchSnapshot(
         'node-type-colour-size-change.png',
     );
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
 });
 
 test('Preview colour and size by type changes', async ({ page }) => {
