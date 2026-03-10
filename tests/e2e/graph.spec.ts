@@ -28,65 +28,6 @@ export async function changeTab(page: Page, tabName: string) {
     await page.waitForTimeout(500);
 }
 
-const CANVAS_ELEMENT_POSITIONS = {
-    'no graph': {
-        'single node': {
-            x: 465,
-            y: 310,
-        },
-        'single edge two nodes': [
-            {
-                x: 215,
-                y: 135,
-            },
-            {
-                x: 560,
-                y: 500,
-            },
-        ],
-        'pedro expanded': {
-            'hamza->pedro': {
-                x: 387,
-                y: 219,
-            },
-            pedro: {
-                x: 565,
-                y: 120,
-            },
-            hamza: {
-                x: 215,
-                y: 320,
-            },
-        },
-        'pedro expanded with timeline': {
-            hamza: {
-                x: 295,
-                y: 210,
-            },
-        },
-    },
-    'new_folder/persistent_filler': {
-        pedro: {
-            x: 585,
-            y: 340,
-        },
-        ben: {
-            x: 355,
-            y: 325,
-        },
-    },
-    'new_folder/persistent_second_filler': {
-        'Rabbit Inc': {
-            x: 520,
-            y: 100,
-        },
-        'Judy->Rabbit Inc': {
-            x: 572,
-            y: 205,
-        },
-    },
-};
-
 test('Close right hand side panel button and open again', async ({ page }) => {
     await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
 
@@ -582,15 +523,15 @@ test('Change colour and size of node by type', async ({ settingsPage }) => {
     await settingsPage.waitForTimeout(2000);
     const state = await getAppState(settingsPage);
     await expect(state?.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
-        '#D0021B',
+        '#d0021b',
     );
     await expect(state?.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
     await expect(state?.nodes.find((n) => n.id === 'Hamza')?.colour).toEqual(
-        '#D0021B',
+        '#d0021b',
     );
     await expect(state?.nodes.find((n) => n.id === 'Hamza')?.size).toEqual(30);
     await expect(state?.nodes.find((n) => n.id === 'Ben')?.colour).toEqual(
-        '#D0021B',
+        '#d0021b',
     );
     await expect(state?.nodes.find((n) => n.id === 'Ben')?.size).toEqual(30);
 });
@@ -609,12 +550,9 @@ test('Preview colour and size by type changes', async ({ page }) => {
     await page.waitForTimeout(1000);
     const state = await getAppState(page);
     expect(state?.nodes.find((n) => n.id === 'Fred')?.colour).toEqual(
-        '#D0021B',
+        '#d0021b',
     );
-    expect(state?.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
-    // expect(await page.screenshot()).toMatchSnapshot(
-    //     'preview-node-type-colour-size-change.png',
-    // );
+    expect(state?.nodes.find((n) => n.id === 'Fred')?.size).toEqual(30);
 });
 
 test('Preview colour and size changes', async ({ page }) => {
