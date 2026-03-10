@@ -97,14 +97,12 @@ test('Pin node and highlight', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     await openTimeline(page);
 
-    // Pin the Pometry node
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
         .locator('image')
         .click();
 
-    // Pinned node should move to the top — Pometry must appear above Ben (first alphabetically)
     const pometryY = (await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
