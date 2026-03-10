@@ -1,15 +1,28 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+interface G6NodeData {
+    id: string;
+    displayName: string;
+}
+type BrowserWindow = Window & {
+    __TESTING_ENABLED__?: boolean;
+    __G6_GRAPH__?: {
+        getNodeData(): G6NodeData[];
+        getElementPosition(id: string): [number, number];
+        getViewportByCanvas(point: [number, number]): [number, number];
+    };
+    __APP_STATE__?: AppTestingState;
+};
+
 async function getNodePosition(
     page: Page,
     displayName: string,
 ): Promise<{ x: number; y: number }> {
     await page.waitForFunction(
         (name) => {
-            const graph = (window as any).__G6_GRAPH__;
+            const graph = (window as BrowserWindow).__G6_GRAPH__;
             return !!(
-                graph &&
-                graph.getNodeData().some((n: any) => n.displayName === name)
+                graph && graph.getNodeData().some((n) => n.displayName === name)
             );
         },
         displayName,
@@ -17,14 +30,12 @@ async function getNodePosition(
     );
 
     const position = await page.evaluate((name) => {
-        const graph = (window as any).__G6_GRAPH__;
-        const node = graph
-            .getNodeData()
-            .find((n: any) => n.displayName === name);
-        if (!node) return null;
+        const graph = (window as BrowserWindow).__G6_GRAPH__;
+        const node = graph?.getNodeData().find((n) => n.displayName === name);
+        if (!node || !graph) return null;
         const canvasPoint = graph.getElementPosition(node.id);
         const vp = graph.getViewportByCanvas(canvasPoint);
-        return { x: vp[0] as number, y: vp[1] as number };
+        return { x: vp[0], y: vp[1] };
     }, displayName);
     if (!position) {
         throw new Error(
@@ -361,10 +372,8 @@ type AppTestingState = {
         colour: string | undefined;
         size: number | undefined;
     }[];
-};
+}
 
 export async function getAppState(page: Page) {
-    return await page.evaluate(
-        () => (window as any).__APP_STATE__ as AppTestingState | undefined,
-    );
+    return await page.evaluate(() => (window as BrowserWindow).__APP_STATE__);
 }
