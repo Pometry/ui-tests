@@ -358,7 +358,9 @@ export async function fillInStyling(
         await sizeInput.fill('');
         await sizeInput.fill(size.toString());
     }
-type AppTestingState = {
+}
+
+interface AppTestingState {
     selected: string[];
     highlighted: {
         nodes: string[] | undefined;
