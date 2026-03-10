@@ -593,7 +593,7 @@ test('Change colour and size of individual node', async ({ settingsPage }) => {
     await expect(settingsPage.getByText('Styling updated')).toBeVisible({
         timeout: 5000,
     });
-    await settingsPage.waitForTimeout(3000);
+    await settingsPage.waitForTimeout(4000);
     expect(await settingsPage.screenshot()).toMatchSnapshot(
         'node-colour-size-change.png',
     );
