@@ -362,6 +362,7 @@ export async function fillInStyling(
 
 interface AppTestingState {
     selected: string[];
+    selectedEdges: { src: string; dst: string }[];
     highlighted: {
         nodes: string[] | undefined;
         layer: string | undefined;
@@ -374,8 +375,19 @@ interface AppTestingState {
         colour: string | undefined;
         size: number | undefined;
     }[];
+    edges: {
+        src: string;
+        dst: string;
+        layerNames: string[];
+        colour: string | undefined;
+        size: number | undefined;
+    }[];
 }
 
-export async function getAppState(page: Page) {
-    return await page.evaluate(() => (window as BrowserWindow).__APP_STATE__);
+export async function getAppState(page: Page): Promise<AppTestingState> {
+    const state = await page.evaluate(
+        () => (window as BrowserWindow).__APP_STATE__,
+    );
+    if (!state) throw new Error('__APP_STATE__ not found on window');
+    return state;
 }
