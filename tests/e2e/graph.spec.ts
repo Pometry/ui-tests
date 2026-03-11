@@ -8,6 +8,7 @@ import {
     dragSlider,
     fillInStyling,
     getAppState,
+    getGraphNodeIds,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
     openTimeline,
@@ -186,12 +187,7 @@ test('Double click expand node and delete by floating actions button', async ({
     await waitForLayoutToFinish(page);
     await doubleClickOnNode(page, 'Pedro');
     await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
-    await expect(state?.nodes?.map((n) => n.id)).toEqual([
-        'Pedro',
-        'Ben',
-        'Hamza',
-    ]);
+    expect(await getGraphNodeIds(page)).toEqual(['Pedro', 'Ben', 'Hamza']);
 });
 
 test('Expand node by floating actions button', async ({ page }) => {
@@ -215,12 +211,7 @@ test('Expand node by floating actions button', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
-    await expect(state?.nodes?.map((n) => n.id)).toEqual([
-        'Pedro',
-        'Ben',
-        'Hamza',
-    ]);
+    expect(await getGraphNodeIds(page)).toEqual(['Pedro', 'Ben', 'Hamza']);
 });
 
 test('Expand two-hop by floating actions button', async ({ page }) => {
@@ -244,8 +235,7 @@ test('Expand two-hop by floating actions button', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
-    await expect(state?.nodes?.map((n) => n.id)).toEqual([
+    expect(await getGraphNodeIds(page)).toEqual([
         'Pedro',
         'Ben',
         'Hamza',
@@ -277,12 +267,7 @@ test('Expand shared neighbours by floating actions button', async ({
         })
         .click();
     await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
-    await expect(state?.nodes?.map((n) => n.id)).toEqual([
-        'Pedro',
-        'Ben',
-        'Hamza',
-    ]);
+    expect(await getGraphNodeIds(page)).toEqual(['Pedro', 'Hamza', 'Ben']);
 });
 
 test('Click edge to reveal right hand side panel details', async ({ page }) => {
@@ -322,8 +307,7 @@ test('Undo and redo in floating actions menu', async ({ page }) => {
     await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Redo (⌘⇧Z)', exact: true }).click();
     await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
-    await expect(state?.nodes).toHaveLength(3);
+    expect(await getGraphNodeIds(page)).toHaveLength(3);
 });
 
 test('Expand node, fit view and select all similar nodes', async ({ page }) => {
@@ -417,15 +401,14 @@ test('Click backspace to delete nodes', async ({ page }) => {
         nodeType: 'Person',
     });
     await doubleClickOnNode(page, 'Pedro');
-    await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
+    await selectLayout(page, 'Arrange nodes in concentric circles');
     await fitView(page);
-    await expect(state?.nodes).toHaveLength(3);
+    await waitForLayoutToFinish(page);
+    expect(await getGraphNodeIds(page)).toHaveLength(3);
     await clickOnNode(page, 'Hamza');
     await page.keyboard.press('Backspace');
     await waitForLayoutToFinish(page);
-    const state2 = await getAppState(page);
-    await expect(state2?.nodes).toHaveLength(2);
+    expect(await getGraphNodeIds(page)).toHaveLength(2);
 });
 
 test('RHS Selected properties has max height for table cells', async ({
@@ -872,6 +855,79 @@ test('catch console logs and errors', async ({ page }) => {
 
     expect(consoleErrors, 'Console errors found').toStrictEqual([]);
     expect(consoleLogs, 'Console logs found').toStrictEqual([]);
+});
+
+test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
+    test.setTimeout(60000);
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await fitView(page);
+
+    // Temporary styling: preview Pedro's colour/size without saving
+    await clickOnNode(page, 'Pedro');
+    await changeTab(page, 'Styling');
+    await fillInStyling(page, { colourValue: 'BD10E0', size: 25 });
+    await page.waitForTimeout(1000);
+
+    // Save individual node styling for Pedro
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForTimeout(2000);
+    await page.waitForSelector('text=Node style updated');
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    // Edge styling by layer (preview): Pedro-Hamza edge, transfers layer
+    await clickOnEdge(page, 'Pedro', 'Hamza');
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
+    await page.getByRole('option', { name: 'transfers' }).click();
+    await fillInStyling(page, { colourValue: 'F5A623' });
+    await page.waitForTimeout(1000);
+
+    // Change node styling by type (Person)
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
+    await waitForLayoutToFinish(page);
+    await changeTab(page, 'Styling');
+    await page.getByText('Select Node Type').click();
+    await page.getByRole('option', { name: 'Person' }).click();
+    await fillInStyling(page, { colourValue: 'D0021B', size: 20 });
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    // Select multiple nodes (Person type styling active)
+    await clickOnNodes(page, ['Pedro', 'Ben', 'Hamza']);
+
+    // Highlight a relationship layer from the Overview panel
+    await changeTab(page, 'Overview');
+    await page.getByText('Relationships').waitFor();
+    await page
+        .getByRole('button', { name: 'Highlight on graph' })
+        .first()
+        .click();
+    await waitForLayoutToFinish(page);
+
+    // Final screenshot: concentric layout with styled + selected nodes + highlighting
+    await selectLayout(page, 'Arrange nodes in concentric circles');
+    await fitView(page);
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'comprehensive-styling-selecting-highlighting.png',
+    );
+
+    // Cleanup: reset Person type styling
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
+    await waitForLayoutToFinish(page);
+    await changeTab(page, 'Styling');
+    await page.getByText('Select Node Type').click();
+    await page.getByRole('option', { name: 'Person' }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
+    await page.waitForTimeout(2000);
 });
 
 // skipping because it only works for one browser test, fails on other browser repeats (graph already exists after creating once in chromium)
