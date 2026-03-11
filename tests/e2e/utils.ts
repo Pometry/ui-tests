@@ -4,10 +4,15 @@ interface G6NodeData {
     id: string;
     displayName: string;
 }
+interface G6EdgeData {
+    id?: string;
+    source: string;
+    target: string;
+}
 type BrowserWindow = Window & {
     __TESTING_ENABLED__?: boolean;
     __G6_GRAPH__?: {
-        getNodeData(): G6NodeData[];
+        getData(): { nodes: G6NodeData[]; edges: G6EdgeData[] };
         getElementPosition(id: string): [number, number];
         getViewportByCanvas(point: [number, number]): [number, number];
     };
@@ -22,7 +27,8 @@ async function getNodePosition(
         (name) => {
             const graph = (window as BrowserWindow).__G6_GRAPH__;
             return !!(
-                graph && graph.getNodeData().some((n) => n.displayName === name)
+                graph &&
+                graph.getData().nodes.some((n) => n.displayName === name)
             );
         },
         displayName,
@@ -31,7 +37,7 @@ async function getNodePosition(
 
     const position = await page.evaluate((name) => {
         const graph = (window as BrowserWindow).__G6_GRAPH__;
-        const node = graph?.getNodeData().find((n) => n.displayName === name);
+        const node = graph?.getData().nodes.find((n) => n.displayName === name);
         if (!node || !graph) return null;
         const canvasPoint = graph.getElementPosition(node.id);
         const vp = graph.getViewportByCanvas(canvasPoint);
@@ -382,6 +388,14 @@ interface AppTestingState {
         colour: string | undefined;
         size: number | undefined;
     }[];
+}
+
+export async function getGraphNodeIds(page: Page): Promise<string[]> {
+    return page.evaluate(() => {
+        const graph = (window as BrowserWindow).__G6_GRAPH__;
+        if (!graph) throw new Error('__G6_GRAPH__ not found on window');
+        return graph.getData().nodes.map((n) => n.id);
+    });
 }
 
 export async function getAppState(page: Page): Promise<AppTestingState> {
