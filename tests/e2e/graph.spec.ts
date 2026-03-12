@@ -639,8 +639,8 @@ test('Change colour and size of node by type', async ({ settingsPage }) => {
     );
     await fitView(settingsPage);
 
-    // This will fail if the server has not been restarted in between test runs,
-    // or if bugs cause the reset at the end of these style tests to not work.
+    // This will fail if for whatever reason the test data isn't in a clean
+    // state before running tests.
     expect(await settingsPage.screenshot()).toMatchSnapshot(
         'vanilla-persistent-base-graph.png',
     );

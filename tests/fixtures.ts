@@ -4,7 +4,7 @@ interface MyFixtures {
     settingsPage: Page;
 }
 
-// Extend base test by providing "todoPage" and "settingsPage".
+// Extend base test by providing our own Page extensions.
 // This new "test" can be used in multiple test files, and each of them will get the fixtures.
 export const test = base.extend<MyFixtures>({
     settingsPage: async ({ page }, use) => {
