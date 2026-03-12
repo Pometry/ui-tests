@@ -164,34 +164,37 @@ def setup_large_graph(graph):
 
 
 def __main__():
-    os.system("rm -rf /tmp/vanilla-graphs/vanilla")
-    os.system("rm -rf /tmp/vanilla-graphs/new_folder")
-    os.system("mkdir -p /tmp/vanilla-graphs/vanilla")
-    os.system("mkdir -p /tmp/vanilla-graphs/new_folder")
+    port = int(os.environ.get("RAPHTORY_PORT", "1736"))
+    work_dir = os.environ.get("RAPHTORY_WORK_DIR", "/tmp/vanilla-graphs")
+
+    os.system(f"rm -rf {work_dir}/vanilla")
+    os.system(f"rm -rf {work_dir}/new_folder")
+    os.system(f"mkdir -p {work_dir}/vanilla")
+    os.system(f"mkdir -p {work_dir}/new_folder")
     graph = setup_graph(Graph())
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/event")
+    graph.save_to_file(f"{work_dir}/vanilla/event")
 
     graph = setup_graph(PersistentGraph())
     graph.delete_edge(90, "Ben", "Pedro", "meets")
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/persistent")
+    graph.save_to_file(f"{work_dir}/vanilla/persistent")
 
     graph = setup_large_graph(Graph())
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/large")
+    graph.save_to_file(f"{work_dir}/vanilla/large")
 
     graph = filler_graph(Graph())
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/filler")
+    graph.save_to_file(f"{work_dir}/vanilla/filler")
     graph = filler_graph(PersistentGraph())
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/persistent_filler")
-    graph.save_to_file("/tmp/vanilla-graphs/new_folder/persistent_filler")
+    graph.save_to_file(f"{work_dir}/vanilla/persistent_filler")
+    graph.save_to_file(f"{work_dir}/new_folder/persistent_filler")
 
     graph = second_filler_graph(Graph())
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/second_filler")
+    graph.save_to_file(f"{work_dir}/vanilla/second_filler")
     graph = second_filler_graph(PersistentGraph())
-    graph.save_to_file("/tmp/vanilla-graphs/new_folder/persistent_second_filler")
-    graph.save_to_file("/tmp/vanilla-graphs/vanilla/persistent_second_filler")
+    graph.save_to_file(f"{work_dir}/new_folder/persistent_second_filler")
+    graph.save_to_file(f"{work_dir}/vanilla/persistent_second_filler")
 
-    server = graphql.GraphServer(work_dir="/tmp/vanilla-graphs")
-    server.run(port=1736)
+    server = graphql.GraphServer(work_dir=work_dir)
+    server.run(port=port)
 
 
 if __name__ == "__main__":
