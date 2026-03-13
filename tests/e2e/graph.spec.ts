@@ -872,7 +872,7 @@ test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
     await changeTab(page, 'Styling');
     await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForSelector('text=Node style updated');
+    await page.waitForSelector('text=Styling updated');
     await page.waitForTimeout(2000);
     // Save Person type styling
     await page.getByRole('button', { name: 'Selection' }).click();
@@ -884,7 +884,7 @@ test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
     await page.getByRole('option', { name: 'Person' }).click();
     await fillInStyling(page, { colourValue: 'D0021B', size: 25 });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForSelector('text=Node type style updated');
+    await page.waitForSelector('text=Styling updated');
     // Save meets edge layer styling
     await clickOnEdge(page, 'Pedro', 'Hamza');
     await changeTab(page, 'Styling');
@@ -893,7 +893,7 @@ test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
     await page.getByRole('option', { name: 'meets' }).click();
     await fillInStyling(page, { colourValue: 'F5A623' });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForSelector('text=Edge style updated');
+    await page.waitForSelector('text=Styling updated');
     // Delete Ben
     await clickOnNode(page, 'Ben');
     await page
