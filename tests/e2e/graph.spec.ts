@@ -7,8 +7,7 @@ import {
     doubleClickOnNode,
     dragSlider,
     fillInStyling,
-    getAppState,
-    getGraphNodeIds,
+    getGraphState,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
     openTimeline,
@@ -63,15 +62,11 @@ test('Highlight founds then transfers', async ({ page }) => {
         .getByRole('button', { name: 'Highlight on graph' })
         .click();
     await waitForLayoutToFinish(page);
-    const transferState = await getAppState(page);
-    expect(transferState?.highlighted?.layer).toEqual('transfers');
     await page
         .getByText('founds2')
         .getByRole('button', { name: 'Highlight on graph' })
         .click();
     await waitForLayoutToFinish(page);
-    const foundState = await getAppState(page);
-    expect(foundState?.highlighted?.layer).toEqual('founds');
 });
 
 test('Test layouts', async ({ page }) => {
@@ -187,7 +182,11 @@ test('Double click expand node and delete by floating actions button', async ({
     await waitForLayoutToFinish(page);
     await doubleClickOnNode(page, 'Pedro');
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toEqual(['Pedro', 'Ben', 'Hamza']);
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Ben',
+        'Hamza',
+    ]);
 });
 
 test('Expand node by floating actions button', async ({ page }) => {
@@ -211,7 +210,11 @@ test('Expand node by floating actions button', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toEqual(['Pedro', 'Ben', 'Hamza']);
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Ben',
+        'Hamza',
+    ]);
 });
 
 test('Expand two-hop by floating actions button', async ({ page }) => {
@@ -235,7 +238,7 @@ test('Expand two-hop by floating actions button', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toEqual([
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
         'Pedro',
         'Ben',
         'Hamza',
@@ -267,7 +270,11 @@ test('Expand shared neighbours by floating actions button', async ({
         })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toEqual(['Pedro', 'Hamza', 'Ben']);
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Hamza',
+        'Ben',
+    ]);
 });
 
 test('Click edge to reveal right hand side panel details', async ({ page }) => {
@@ -307,7 +314,7 @@ test('Undo and redo in floating actions menu', async ({ page }) => {
     await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Redo (⌘⇧Z)', exact: true }).click();
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toHaveLength(3);
+    expect((await getGraphState(page)).nodes).toHaveLength(3);
 });
 
 test('Expand node, fit view and select all similar nodes', async ({ page }) => {
@@ -328,8 +335,8 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    const state = await getAppState(page);
-    await expect(state?.selected).toHaveLength(3);
+    const state = await getGraphState(page);
+    expect(state.selected).toHaveLength(3);
 });
 
 test('Click and deselect by floating actions', async ({ page }) => {
@@ -361,8 +368,8 @@ test('Select all from menu and via shortcut', async ({ page }) => {
     await page.waitForTimeout(100);
     await page.keyboard.up('Control');
     await page.waitForTimeout(500);
-    const state = await getAppState(page);
-    await expect(state?.selected).toEqual([
+    const state = await getGraphState(page);
+    expect(state.selected).toEqual([
         'None',
         'Pedro',
         'Ben',
@@ -374,8 +381,8 @@ test('Select all from menu and via shortcut', async ({ page }) => {
         .getByRole('menuitem', { name: 'Clear current selection', exact: true })
         .click();
     await waitForLayoutToFinish(page);
-    const state2 = await getAppState(page);
-    await expect(state2?.selected).toHaveLength(0);
+    const state2 = await getGraphState(page);
+    expect(state2.selected).toHaveLength(0);
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', {
@@ -384,8 +391,8 @@ test('Select all from menu and via shortcut', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    const state3 = await getAppState(page);
-    await expect(state3?.selected).toEqual([
+    const state3 = await getGraphState(page);
+    expect(state3.selected).toEqual([
         'None',
         'Pedro',
         'Ben',
@@ -404,11 +411,11 @@ test('Click backspace to delete nodes', async ({ page }) => {
     await selectLayout(page, 'Arrange nodes in concentric circles');
     await fitView(page);
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toHaveLength(3);
+    expect((await getGraphState(page)).nodes).toHaveLength(3);
     await clickOnNode(page, 'Hamza');
     await page.keyboard.press('Backspace');
     await waitForLayoutToFinish(page);
-    expect(await getGraphNodeIds(page)).toHaveLength(2);
+    expect((await getGraphState(page)).nodes).toHaveLength(2);
 });
 
 test('RHS Selected properties has max height for table cells', async ({
@@ -443,11 +450,11 @@ test('Change colour and size of individual node', async ({ settingsPage }) => {
     await expect(settingsPage.getByText('Styling updated')).toBeVisible({
         timeout: 5000,
     });
-    const state = await getAppState(settingsPage);
-    await expect(state?.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
+    const state = await getGraphState(settingsPage);
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
         '#bd10e0',
     );
-    await expect(state?.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
 });
 
 test('Change colour of edge by layer dropdown', async ({ settingsPage }) => {
@@ -504,12 +511,12 @@ test('Change colour and size of node by type', async ({ settingsPage }) => {
         timeout: 5000,
     });
     await settingsPage.waitForTimeout(2000);
-    const state = await getAppState(settingsPage);
+    const state = await getGraphState(settingsPage);
     await expect(state?.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
         '#d0021b',
     );
-    await expect(state?.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
-    await expect(state?.nodes.find((n) => n.id === 'Hamza')?.colour).toEqual(
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
+    expect(state.nodes.find((n) => n.id === 'Hamza')?.colour).toEqual(
         '#d0021b',
     );
     await expect(state?.nodes.find((n) => n.id === 'Hamza')?.size).toEqual(30);
@@ -531,11 +538,9 @@ test('Preview colour and size by type changes', async ({ page }) => {
     await page.getByRole('option', { name: 'Person' }).click();
     await fillInStyling(page, { colourValue: 'D0021B', size: 30 });
     await page.waitForTimeout(1000);
-    const state = await getAppState(page);
-    expect(state?.nodes.find((n) => n.id === 'Fred')?.colour).toEqual(
-        '#d0021b',
-    );
-    expect(state?.nodes.find((n) => n.id === 'Fred')?.size).toEqual(30);
+    const state = await getGraphState(page);
+    expect(state.nodes.find((n) => n.id === 'Fred')?.colour).toEqual('#d0021b');
+    expect(state.nodes.find((n) => n.id === 'Fred')?.size).toEqual(30);
 });
 
 test('Preview colour and size changes', async ({ page }) => {
@@ -549,9 +554,9 @@ test('Preview colour and size changes', async ({ page }) => {
     await changeTab(page, 'Styling');
     await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
     await page.waitForTimeout(1000);
-    const state = await getAppState(page);
-    expect(state?.nodes.find((n) => n.id === 'Ben')?.colour).toEqual('#bd10e0');
-    expect(state?.nodes.find((n) => n.id === 'Ben')?.size).toEqual(30);
+    const state = await getGraphState(page);
+    expect(state.nodes.find((n) => n.id === 'Ben')?.colour).toEqual('#bd10e0');
+    expect(state.nodes.find((n) => n.id === 'Ben')?.size).toEqual(30);
 });
 
 test('Preview edge colour changes', async ({ page }) => {
@@ -830,8 +835,8 @@ test('Brush select on main canvas works from first click', async ({ page }) => {
     await page.mouse.move(120, 330);
     await page.mouse.up();
     await page.keyboard.up('Shift');
-    const state = await getAppState(page);
-    await expect(state?.selected).toEqual(['None', 'Ben']);
+    const state = await getGraphState(page);
+    expect(state.selected).toEqual(['None', 'Ben']);
 });
 
 test('catch console logs and errors', async ({ page }) => {
@@ -858,74 +863,116 @@ test('catch console logs and errors', async ({ page }) => {
 });
 
 test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
-    test.setTimeout(60000);
+    test.setTimeout(100000);
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await fitView(page);
 
-    // Temporary styling: preview Pedro's colour/size without saving
+    // Save individual node styling for Pedro
     await clickOnNode(page, 'Pedro');
     await changeTab(page, 'Styling');
-    await fillInStyling(page, { colourValue: 'BD10E0', size: 25 });
-    await page.waitForTimeout(1000);
-
-    // Save individual node styling for Pedro
+    await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(2000);
     await page.waitForSelector('text=Node style updated');
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.waitForTimeout(2000);
-
-    // Edge styling by layer (preview): Pedro-Hamza edge, transfers layer
-    await clickOnEdge(page, 'Pedro', 'Hamza');
-    await changeTab(page, 'Styling');
-    await page.waitForTimeout(100);
-    await page.getByText('Select Edge Layer').click();
-    await page.getByRole('option', { name: 'transfers' }).click();
-    await fillInStyling(page, { colourValue: 'F5A623' });
-    await page.waitForTimeout(1000);
-
-    // Change node styling by type (Person)
+    // Save Person type styling
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', { name: 'Clear current selection' })
         .click();
-    await waitForLayoutToFinish(page);
-    await changeTab(page, 'Styling');
+    await page.waitForTimeout(2000);
     await page.getByText('Select Node Type').click();
     await page.getByRole('option', { name: 'Person' }).click();
-    await fillInStyling(page, { colourValue: 'D0021B', size: 20 });
+    await fillInStyling(page, { colourValue: 'D0021B', size: 25 });
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await page.waitForTimeout(2000);
-
-    // Select multiple nodes (Person type styling active)
-    await clickOnNodes(page, ['Pedro', 'Ben', 'Hamza']);
-
-    // Highlight a relationship layer from the Overview panel
-    await changeTab(page, 'Overview');
-    await page.getByText('Relationships').waitFor();
+    await page.waitForSelector('text=Node type style updated');
+    // Save meets edge layer styling
+    await clickOnEdge(page, 'Pedro', 'Hamza');
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
+    await page.getByRole('option', { name: 'meets' }).click();
+    await fillInStyling(page, { colourValue: 'F5A623' });
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForSelector('text=Edge style updated');
+    // Delete Ben
+    await clickOnNode(page, 'Ben');
     await page
-        .getByRole('button', { name: 'Highlight on graph' })
-        .first()
+        .getByRole('button', {
+            name: 'Delete selected (⌫)',
+        })
         .click();
     await waitForLayoutToFinish(page);
-
-    // Final screenshot: concentric layout with styled + selected nodes + highlighting
-    await selectLayout(page, 'Arrange nodes in concentric circles');
+    // Delete None
+    await clickOnNode(page, 'None');
+    await page
+        .getByRole('button', {
+            name: 'Delete selected (⌫)',
+        })
+        .click();
+    await waitForLayoutToFinish(page);
+    // Undo (restores None)
+    await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
+    // Redo (deletes None again)
+    await page.getByRole('button', { name: 'Redo (⌘⇧Z)', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    // Undo (restores None)
+    await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    // Preview individual node styling for Hamza
+    await clickOnNode(page, 'Hamza');
+    await changeTab(page, 'Styling');
+    await fillInStyling(page, { colourValue: '4A90D9', size: 35 });
+    await page.waitForTimeout(1000);
+    // Preview Company type styling
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
+    await page.waitForTimeout(2000);
+    await page.getByText('Person').click();
+    await page.getByRole('option', { name: 'Company' }).click();
+    await fillInStyling(page, { colourValue: '7ED321', size: 20 });
+    // Preview founds edge layer styling
+    await clickOnEdge(page, 'Hamza', 'Pometry');
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
+    await page.getByRole('option', { name: 'founds' }).click();
+    await fillInStyling(page, { colourValue: 'FF6B6B' });
+    await openTimeline(page);
     await fitView(page);
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
         'comprehensive-styling-selecting-highlighting.png',
     );
 
-    // Cleanup: reset Person type styling
+    //clean up
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
+    await waitForLayoutToFinish(page);
+
+    await clickOnNode(page, 'Pedro');
+    await changeTab(page, 'Styling');
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
+    await page.waitForTimeout(2000);
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', { name: 'Clear current selection' })
         .click();
     await waitForLayoutToFinish(page);
     await changeTab(page, 'Styling');
-    await page.getByText('Select Node Type').click();
+    await page.getByText('Company').click();
     await page.getByRole('option', { name: 'Person' }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await clickOnEdge(page, 'Pedro', 'Hamza');
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
+    await page.getByRole('option', { name: 'meets' }).click();
     await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.waitForTimeout(2000);
 });

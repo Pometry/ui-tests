@@ -3,6 +3,11 @@ import { expect, Locator, Page } from '@playwright/test';
 interface G6NodeData {
     id: string;
     displayName: string;
+    states?: string[];
+    style?: {
+        fill?: string;
+        size?: number;
+    };
 }
 interface G6EdgeData {
     id?: string;
@@ -16,7 +21,6 @@ type BrowserWindow = Window & {
         getElementPosition(id: string): [number, number];
         getViewportByCanvas(point: [number, number]): [number, number];
     };
-    __APP_STATE__?: AppTestingState;
 };
 
 async function getNodePosition(
@@ -366,42 +370,29 @@ export async function fillInStyling(
     }
 }
 
-interface AppTestingState {
+interface GraphState {
     selected: string[];
-    selectedEdges: { src: string; dst: string }[];
-    highlighted: {
-        nodes: string[] | undefined;
-        layer: string | undefined;
-    };
-    layout: unknown;
     nodes: {
         id: string;
-        displayName: string;
-        position: { x: number; y: number } | undefined;
-        colour: string | undefined;
-        size: number | undefined;
-    }[];
-    edges: {
-        src: string;
-        dst: string;
-        layerNames: string[];
         colour: string | undefined;
         size: number | undefined;
     }[];
 }
 
-export async function getGraphNodeIds(page: Page): Promise<string[]> {
+export async function getGraphState(page: Page): Promise<GraphState> {
     return page.evaluate(() => {
         const graph = (window as BrowserWindow).__G6_GRAPH__;
         if (!graph) throw new Error('__G6_GRAPH__ not found on window');
-        return graph.getData().nodes.map((n) => n.id);
+        const data = graph.getData();
+        return {
+            selected: data.nodes
+                .filter((n) => n.states?.includes('selected'))
+                .map((n) => n.id),
+            nodes: data.nodes.map((n) => ({
+                id: n.id,
+                colour: n.style?.fill,
+                size: n.style?.size,
+            })),
+        };
     });
-}
-
-export async function getAppState(page: Page): Promise<AppTestingState> {
-    const state = await page.evaluate(
-        () => (window as BrowserWindow).__APP_STATE__,
-    );
-    if (!state) throw new Error('__APP_STATE__ not found on window');
-    return state;
 }
