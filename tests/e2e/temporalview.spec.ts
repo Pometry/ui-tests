@@ -96,25 +96,34 @@ test('Temporal view hover over edges', async ({ page }) => {
 test('Pin node and highlight', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'event');
     await openTimeline(page);
+
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
         .locator('image')
         .click();
-    expect(await page.screenshot()).toMatchSnapshot('pinnode.png', {
-        maxDiffPixels: 3500,
-    });
+
+    const pometryY = (await page
+        .locator('g')
+        .filter({ hasText: /^Pometry$/ })
+        .first()
+        .boundingBox())!.y;
+    const benY = (await page
+        .locator('g')
+        .filter({ hasText: /^Ben$/ })
+        .first()
+        .boundingBox())!.y;
+    expect(pometryY).toBeLessThan(benY);
+
     await page
         .locator('g')
         .filter({ hasText: /^Pometry$/ })
         .locator('circle')
         .click();
-    expect(await page.screenshot()).toMatchSnapshot(
-        'highlightedandpinned.png',
-        {
-            maxDiffPixels: 3500,
-        },
-    );
+    await page.getByRole('tab', { name: 'Selected' }).click();
+    await expect(
+        page.getByRole('heading', { name: 'Pometry', exact: true }),
+    ).toBeVisible();
 });
 
 test('Zoom into timeline view', async ({ page }) => {
@@ -179,9 +188,13 @@ test('Preview colour of edge on timeline view', async ({ page }) => {
         .getByRole('textbox')
         .fill('F5A623');
     await page.waitForTimeout(2000);
-    expect(await page.screenshot()).toMatchSnapshot(
-        'preview-temporal-edge-colour-change.png',
-    );
+
+    await expect(
+        page
+            .getByLabel('Edge ID Ben->Pedro_meets_1679356800000')
+            .locator('path')
+            .first(),
+    ).toHaveCSS('fill', 'rgb(245, 166, 35)');
 });
 
 test('Change colour of edge on timeline view', async ({ settingsPage }) => {
@@ -212,7 +225,10 @@ test('Change colour of edge on timeline view', async ({ settingsPage }) => {
         timeout: 5000,
     });
     await settingsPage.waitForTimeout(2000);
-    expect(await settingsPage.screenshot()).toMatchSnapshot(
-        'temporal-edge-colour-change.png',
-    );
+    await expect(
+        settingsPage
+            .getByLabel('Edge ID Ben->Pedro_meets_50')
+            .locator('path')
+            .first(),
+    ).toHaveCSS('fill', 'rgb(245, 166, 35)');
 });
