@@ -89,7 +89,7 @@ test('Playground loads with Schema and Editor visible', async ({ page }) => {
         page.getByLabel('Query editor').locator('.cm-content'),
     ).toBeVisible();
 
-    await expect(page).toHaveScreenshot('playground-loaded.png');
+    expect(await page.screenshot()).toMatchSnapshot('playground-loaded.png');
 });
 
 // ─────────────────────────────────────────────────────────────────────
