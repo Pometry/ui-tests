@@ -16,9 +16,9 @@ async function waitForSchemaReady(page: import('@playwright/test').Page) {
         await toggleBtn.click();
     }
 
-    // Click the Schema tab (label is "Schema ..." before introspection, "Schema" after)
+    // Click the Schema tab
     await page
-        .locator('.MuiTab-root', { hasText: /^Schema/ })
+        .getByRole('tab', { name: /^Schema/ })
         .first()
         .click({ timeout: 10000 });
 
@@ -27,7 +27,9 @@ async function waitForSchemaReady(page: import('@playwright/test').Page) {
         page.getByText('Connecting to server for schema introspection'),
     ).toBeHidden({ timeout: 15000 });
     await expect(
-        page.locator('.MuiChip-root').filter({ hasText: 'Query' }).first(),
+        page
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: 'Query' }),
     ).toBeVisible({ timeout: 10000 });
 }
 
@@ -42,9 +44,7 @@ async function openExamplesTab(page: import('@playwright/test').Page) {
         await toggleBtn.click();
     }
 
-    await page
-        .locator('.MuiTab-root', { hasText: 'Examples' })
-        .click({ timeout: 10000 });
+    await page.getByRole('tab', { name: 'Examples' }).click({ timeout: 10000 });
 }
 
 /**
@@ -54,11 +54,7 @@ async function clickSchemaField(
     page: import('@playwright/test').Page,
     fieldName: string,
 ) {
-    await page
-        .locator('.MuiListItemButton-root')
-        .filter({ hasText: fieldName })
-        .first()
-        .click();
+    await page.getByRole('button', { name: fieldName }).first().click();
 }
 
 /**
@@ -68,14 +64,15 @@ async function setVariablesContent(
     page: import('@playwright/test').Page,
     content: string,
 ) {
-    const variablesEditor = page.locator('.cm-content').nth(1);
+    const variablesEditor = page
+        .getByLabel('Variables editor')
+        .locator('.cm-content');
     if (!(await variablesEditor.isVisible().catch(() => false))) {
         await page.getByRole('button', { name: 'Variables' }).click();
         await expect(variablesEditor).toBeVisible();
     }
     await variablesEditor.click();
-    const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
-    await page.keyboard.press(`${mod}+A`);
+    await page.keyboard.press('ControlOrMeta+A');
     await page.keyboard.type(content, { delay: 5 });
 }
 
@@ -88,11 +85,11 @@ test('Playground loads with Schema and Editor visible', async ({ page }) => {
     await expect(
         page.getByPlaceholder('Search types and fields...'),
     ).toBeVisible();
-    await expect(page.locator('.cm-content').first()).toBeVisible();
+    await expect(
+        page.getByLabel('Query editor').locator('.cm-content'),
+    ).toBeVisible();
 
-    await expect(page).toHaveScreenshot('playground-loaded.png', {
-        maxDiffPixels: 3000,
-    });
+    await expect(page).toHaveScreenshot('playground-loaded.png');
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -106,9 +103,8 @@ test.describe('Schema Explorer — Navigation', () => {
 
         // Click Query chip → see its fields
         await page
-            .locator('.MuiChip-root')
-            .filter({ hasText: 'Query' })
-            .first()
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: 'Query' })
             .click();
         await expect(
             page.getByText('graph', { exact: true }).first(),
@@ -116,24 +112,16 @@ test.describe('Schema Explorer — Navigation', () => {
 
         // Click "graph" field → navigate to Graph type
         await clickSchemaField(page, 'graph');
-        await expect(
-            page.locator('.MuiChip-root').filter({ hasText: 'Graph' }).first(),
-        ).toBeVisible();
+        await expect(page.getByText('Graph').first()).toBeVisible();
 
         // Go deeper — click "nodes" field
         await clickSchemaField(page, 'nodes');
 
         // Breadcrumbs should show the nested type
-        await expect(
-            page.locator('.MuiChip-root').filter({ hasText: 'Query' }).first(),
-        ).toBeVisible();
+        await expect(page.getByText('Query').first()).toBeVisible();
 
         // Click "Query" breadcrumb to go back
-        await page
-            .locator('.MuiChip-root')
-            .filter({ hasText: 'Query' })
-            .first()
-            .click();
+        await page.getByLabel('Schema breadcrumbs').getByText('Query').click();
 
         // Should be back at Query level with "graph" field visible
         await expect(
@@ -148,13 +136,15 @@ test.describe('Schema Explorer — Navigation', () => {
 
         // Navigate into Query → Graph
         await page
-            .locator('.MuiChip-root')
-            .filter({ hasText: 'Query' })
-            .first()
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: 'Query' })
             .click();
         await clickSchemaField(page, 'graph');
 
-        const chipsBefore = await page.locator('.MuiChip-root').count();
+        const chipsBefore = await page
+            .getByLabel('Schema breadcrumbs')
+            .locator('[class*="MuiChip"]')
+            .count();
 
         // Search for "Graph" (the type we're already on) and click it
         const searchInput = page.getByPlaceholder('Search types and fields...');
@@ -162,8 +152,7 @@ test.describe('Schema Explorer — Navigation', () => {
         await page.waitForTimeout(500);
 
         const graphResult = page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: /^Graph$/ })
+            .getByRole('option', { name: /^Graph$/ })
             .first();
         if (await graphResult.isVisible()) {
             await graphResult.click();
@@ -173,7 +162,10 @@ test.describe('Schema Explorer — Navigation', () => {
         await expect(searchInput).toHaveValue('');
 
         // Chip count should not have increased
-        const chipsAfter = await page.locator('.MuiChip-root').count();
+        const chipsAfter = await page
+            .getByLabel('Schema breadcrumbs')
+            .locator('[class*="MuiChip"]')
+            .count();
         expect(chipsAfter).toBeLessThanOrEqual(chipsBefore);
     });
 
@@ -181,13 +173,11 @@ test.describe('Schema Explorer — Navigation', () => {
         await waitForSchemaReady(page);
 
         const mutationChip = page
-            .locator('.MuiChip-root')
-            .filter({ hasText: 'Mutation' });
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: 'Mutation' });
         if (await mutationChip.isVisible()) {
             await mutationChip.click();
-            await expect(
-                page.locator('.MuiListItemButton-root').first(),
-            ).toBeVisible();
+            await expect(page.getByRole('button').first()).toBeVisible();
         }
     });
 
@@ -198,30 +188,17 @@ test.describe('Schema Explorer — Navigation', () => {
 
         // Click "All Types"
         await page
-            .locator('.MuiChip-root')
-            .filter({ hasText: /All Types/ })
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: /All Types/ })
             .click();
-        await expect(
-            page.locator('.MuiListItemButton-root').first(),
-        ).toBeVisible();
+        await expect(page.getByRole('button').first()).toBeVisible();
 
         // Click "Graph" from the list
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Graph' })
-            .first()
-            .click();
+        await page.getByRole('button', { name: 'Graph' }).first().click();
 
         // Breadcrumbs should contain All Types and Graph
-        await expect(
-            page
-                .locator('.MuiChip-root')
-                .filter({ hasText: 'All Types' })
-                .first(),
-        ).toBeVisible();
-        await expect(
-            page.locator('.MuiChip-root').filter({ hasText: 'Graph' }).first(),
-        ).toBeVisible();
+        await expect(page.getByText('All Types').first()).toBeVisible();
+        await expect(page.getByText('Graph').first()).toBeVisible();
     });
 
     test('union type shows member types', async ({ page }) => {
@@ -229,8 +206,8 @@ test.describe('Schema Explorer — Navigation', () => {
 
         // Switch to All Types view
         await page
-            .locator('.MuiChip-root')
-            .filter({ hasText: /All Types/ })
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: /All Types/ })
             .first()
             .click();
 
@@ -241,46 +218,25 @@ test.describe('Schema Explorer — Navigation', () => {
 
         // Click the exact NamespacedItem (not CollectionOfNamespacedItem)
         await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: /^NamespacedItem$/ })
+            .getByRole('option', { name: /^NamespacedItem$/ })
             .first()
             .click();
 
         // Should now be viewing NamespacedItem — breadcrumb should show it
-        await expect(
-            page
-                .locator('.MuiChip-root')
-                .filter({ hasText: 'NamespacedItem' })
-                .first(),
-        ).toBeVisible();
+        await expect(page.getByText('NamespacedItem').first()).toBeVisible();
 
         // Union member types should be listed
         await expect(
-            page
-                .locator('.MuiListItemButton-root')
-                .filter({ hasText: 'Namespace' })
-                .first(),
+            page.getByRole('button', { name: 'Namespace' }).first(),
         ).toBeVisible();
         await expect(
-            page
-                .locator('.MuiListItemButton-root')
-                .filter({ hasText: 'MetaGraph' })
-                .first(),
+            page.getByRole('button', { name: 'MetaGraph' }).first(),
         ).toBeVisible();
 
         // Clicking a member type should navigate to it
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Namespace' })
-            .first()
-            .click();
+        await page.getByRole('button', { name: 'Namespace' }).first().click();
 
-        await expect(
-            page
-                .locator('.MuiChip-root')
-                .filter({ hasText: 'Namespace' })
-                .first(),
-        ).toBeVisible();
+        await expect(page.getByText('Namespace').first()).toBeVisible();
     });
 });
 
@@ -298,12 +254,10 @@ test.describe('Schema Explorer — Search', () => {
         await page.waitForTimeout(500);
 
         // Results should appear
-        await expect(
-            page.locator('.MuiListItemButton-root').first(),
-        ).toBeVisible();
+        await expect(page.getByRole('option').first()).toBeVisible();
 
         // Click the first result
-        await page.locator('.MuiListItemButton-root').first().click();
+        await page.getByRole('option').first().click();
 
         // Search should be cleared
         await expect(searchInput).toHaveValue('');
@@ -316,23 +270,22 @@ test.describe('Schema Explorer — Search', () => {
 
         // Navigate into Query → Graph
         await page
-            .locator('.MuiChip-root')
-            .filter({ hasText: 'Query' })
-            .first()
+            .getByLabel('Schema root types')
+            .getByRole('tab', { name: 'Query' })
             .click();
         await clickSchemaField(page, 'graph');
 
-        const chipsBefore = await page.locator('.MuiChip-root').count();
+        const chipsBefore = await page
+            .getByLabel('Schema breadcrumbs')
+            .locator('[class*="MuiChip"]')
+            .count();
 
         // Search for "Graph" and click it
         const searchInput = page.getByPlaceholder('Search types and fields...');
         await searchInput.fill('Graph');
         await page.waitForTimeout(500);
 
-        const result = page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: /^Graph$/ })
-            .first();
+        const result = page.getByRole('option', { name: /^Graph$/ }).first();
         if (await result.isVisible()) {
             await result.click();
         }
@@ -341,7 +294,10 @@ test.describe('Schema Explorer — Search', () => {
         await expect(searchInput).toHaveValue('');
 
         // No extra breadcrumb chips
-        const chipsAfter = await page.locator('.MuiChip-root').count();
+        const chipsAfter = await page
+            .getByLabel('Schema breadcrumbs')
+            .locator('[class*="MuiChip"]')
+            .count();
         expect(chipsAfter).toBeLessThanOrEqual(chipsBefore);
     });
 });
@@ -357,51 +313,37 @@ test.describe('Examples Panel', () => {
         await expect(page.getByText('Getting Started')).toBeVisible();
 
         // Enter "Getting Started"
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
 
         // "Available Graphs" should be visible
         await expect(page.getByText('Available Graphs')).toBeVisible();
 
         // Click it → query loads into editor
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Available Graphs' })
-            .click();
+        await page.getByRole('button', { name: 'Available Graphs' }).click();
 
-        await expect(page.locator('.cm-content').first()).toContainText(
-            'namespaces',
-        );
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toContainText('namespaces');
     });
 
     test('Data Mutations example sets headers', async ({ page }) => {
         await openExamplesTab(page);
 
         // Navigate to Data Mutations folder
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Data Mutations' })
-            .click();
+        await page.getByRole('button', { name: 'Data Mutations' }).click();
 
         // Click "Add Node" (has Authorization header)
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Add Node' })
-            .first()
-            .click();
+        await page.getByRole('button', { name: 'Add Node' }).first().click();
 
         // Open headers panel
         await page.getByRole('button', { name: 'Headers' }).click();
 
-        // Verify header key and value are set
-        await expect(
-            page.locator('input[value="Authorization"]'),
-        ).toBeVisible();
-        await expect(
-            page.locator('input[value="Bearer <your-token>"]'),
-        ).toBeVisible();
+        await expect(page.getByLabel('Key').first()).toHaveValue(
+            'Authorization',
+        );
+        await expect(page.getByLabel('Value').first()).toHaveValue(
+            'Bearer <your-token>',
+        );
     });
 });
 
@@ -412,20 +354,16 @@ test.describe('Query Execution', () => {
     test('run Available Graphs and get results', async ({ page }) => {
         await openExamplesTab(page);
 
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Available Graphs' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
+        await page.getByRole('button', { name: 'Available Graphs' }).click();
 
         // Run query
         await page.getByRole('button', { name: /Run/ }).click();
 
         // Results should contain "data" and "namespaces"
-        const resultEditor = page.locator('.cm-content').last();
+        const resultEditor = page
+            .getByLabel('Results editor')
+            .locator('.cm-content');
         await expect(resultEditor).toContainText('data', { timeout: 15000 });
         await expect(resultEditor).toContainText('namespaces');
     });
@@ -436,14 +374,8 @@ test.describe('Query Execution', () => {
         await openExamplesTab(page);
 
         // Load Graph Counts
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Graph Counts' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
+        await page.getByRole('button', { name: 'Graph Counts' }).click();
 
         // Update variables to use a real graph path
         await setVariablesContent(page, '{\n  "path": "vanilla/persistent"\n}');
@@ -452,7 +384,9 @@ test.describe('Query Execution', () => {
         await page.getByRole('button', { name: /Run/ }).click();
 
         // Results should contain node/edge counts
-        const resultEditor = page.locator('.cm-content').last();
+        const resultEditor = page
+            .getByLabel('Results editor')
+            .locator('.cm-content');
         await expect(resultEditor).toContainText('count', { timeout: 15000 });
         const resultText = await resultEditor.textContent();
         expect(resultText).toContain('nodes');
@@ -470,20 +404,21 @@ test.describe('Regression Tests', () => {
         await page.goto('/playground');
 
         // Wait for editor to be ready
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // Focus editor and select everything using End/Home shortcuts
         // (Cmd+A can be unreliable in webkit CodeMirror with long content)
-        const editor = page.locator('.cm-content').first();
+        const editor = page.getByLabel('Query editor').locator('.cm-content');
         await editor.click();
         await page.waitForTimeout(300);
 
         // Move to document end, then select all back to start
-        const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
-        await page.keyboard.press(`${mod}+End`);
-        await page.keyboard.press(`${mod}+Shift+Home`);
+        await page.keyboard.press('ControlOrMeta+End');
+        await page.keyboard.press('ControlOrMeta+Shift+Home');
         await page.keyboard.press('Backspace');
         await page.waitForTimeout(200);
 
@@ -497,7 +432,9 @@ test.describe('Regression Tests', () => {
         await page.getByRole('button', { name: /Run/ }).click();
 
         // Verify exact timestamp value in results
-        const resultEditor = page.locator('.cm-content').last();
+        const resultEditor = page
+            .getByLabel('Results editor')
+            .locator('.cm-content');
         await expect(resultEditor).toContainText('timestamp', {
             timeout: 15000,
         });
@@ -545,52 +482,42 @@ test.describe('Panel Resizing', () => {
     }) => {
         await waitForSchemaReady(page);
 
-        // Count elements with col-resize cursor via JS
         const colResizeCount = await page.evaluate(() => {
-            const allElements = document.querySelectorAll('*');
-            let count = 0;
-            for (const el of allElements) {
-                const style = window.getComputedStyle(el);
-                if (style.cursor === 'col-resize') count++;
-            }
-            return count;
+            return document.querySelectorAll('[role="separator"]').length;
         });
         expect(colResizeCount).toBeGreaterThanOrEqual(2);
 
         // Get the bounding box of the left panel before resize
         const schemaPanelBefore = await page
-            .locator('.MuiTab-root', { hasText: /^Schema/ })
+            .getByRole('tab', { name: /^Schema/ })
             .first()
             .boundingBox();
 
-        // Find the first col-resize element and drag it
-        const firstColResize = await page.evaluate(() => {
-            const allElements = document.querySelectorAll('*');
-            for (const el of allElements) {
-                const style = window.getComputedStyle(el);
-                if (style.cursor === 'col-resize') {
-                    const rect = el.getBoundingClientRect();
-                    return {
-                        x: rect.x + rect.width / 2,
-                        y: rect.y + rect.height / 2,
-                    };
-                }
+        // Find the first separator element and drag it
+        const firstSeparator = await page.evaluate(() => {
+            const separators = document.querySelectorAll('[role="separator"]');
+            if (separators.length > 0) {
+                const rect = separators[0].getBoundingClientRect();
+                return {
+                    x: rect.x + rect.width / 2,
+                    y: rect.y + rect.height / 2,
+                };
             }
             return null;
         });
 
-        if (firstColResize) {
+        if (firstSeparator) {
             // Drag right by 50px
-            await page.mouse.move(firstColResize.x, firstColResize.y);
+            await page.mouse.move(firstSeparator.x, firstSeparator.y);
             await page.mouse.down();
-            await page.mouse.move(firstColResize.x + 50, firstColResize.y, {
+            await page.mouse.move(firstSeparator.x + 50, firstSeparator.y, {
                 steps: 5,
             });
             await page.mouse.up();
 
             // Verify the panel size changed
             const schemaPanelAfter = await page
-                .locator('.MuiTab-root', { hasText: /^Schema/ })
+                .getByRole('tab', { name: /^Schema/ })
                 .first()
                 .boundingBox();
             if (schemaPanelBefore && schemaPanelAfter) {
@@ -612,18 +539,14 @@ test.describe('Code Folding', () => {
         await openExamplesTab(page);
 
         // Load a query with nested curly brackets
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Available Graphs' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
+        await page.getByRole('button', { name: 'Available Graphs' }).click();
 
         // Run the query first to get results with foldable content
         await page.getByRole('button', { name: /Run/ }).click();
-        const resultEditor = page.locator('.cm-content').last();
+        const resultEditor = page
+            .getByLabel('Results editor')
+            .locator('.cm-content');
         await expect(resultEditor).toContainText('data', { timeout: 15000 });
 
         // CodeMirror fold gutters should be visible (⌄ markers)
@@ -657,7 +580,9 @@ test.describe('Code Folding', () => {
 test.describe('Tab Management', () => {
     test('can add and remove query tabs', async ({ page }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
@@ -666,11 +591,11 @@ test.describe('Tab Management', () => {
         await expect(defaultTab).toBeVisible();
 
         // Add a new tab
-        await page.getByRole('button', { name: '+' }).click();
+        await page.getByLabel('Add tab').click();
         await page.waitForTimeout(300);
 
         // Should now have 2 tabs — close button (✕) should be visible
-        const closeButtons = page.getByRole('button', { name: '✕' });
+        const closeButtons = page.getByLabel(/^Close /);
         expect(await closeButtons.count()).toBeGreaterThanOrEqual(2);
 
         // Close the new tab
@@ -685,13 +610,15 @@ test.describe('Tab Management', () => {
         page,
     }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // Add multiple tabs to force overflow
         for (let i = 0; i < 8; i++) {
-            await page.getByRole('button', { name: '+' }).click();
+            await page.getByLabel('Add tab').click();
             await page.waitForTimeout(150);
         }
 
@@ -730,8 +657,11 @@ test.describe('Tab Management', () => {
         expect(hasOverflow).toBe(true);
 
         // Clean up — close extra tabs
-        while ((await page.getByRole('button', { name: '✕' }).count()) > 1) {
-            await page.getByRole('button', { name: '✕' }).last().click();
+        while ((await page.getByLabel(/^Close /).count()) > 1) {
+            await page
+                .getByLabel(/^Close /)
+                .last()
+                .click();
             await page.waitForTimeout(100);
         }
     });
@@ -745,24 +675,19 @@ test.describe('Run Query Methods', () => {
         await openExamplesTab(page);
 
         // Load "Available Graphs" example
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Available Graphs' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
+        await page.getByRole('button', { name: 'Available Graphs' }).click();
 
         // Focus the query editor so the keymap fires
-        await page.locator('.cm-content').first().click();
+        await page.getByLabel('Query editor').locator('.cm-content').click();
 
         // Press Cmd+Enter (Mac) or Ctrl+Enter
-        const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
-        await page.keyboard.press(`${mod}+Enter`);
+        await page.keyboard.press('ControlOrMeta+Enter');
 
         // Results should appear
-        const resultEditor = page.locator('.cm-content').last();
+        const resultEditor = page
+            .getByLabel('Results editor')
+            .locator('.cm-content');
         await expect(resultEditor).toContainText('data', { timeout: 15000 });
         await expect(resultEditor).toContainText('namespaces');
     });
@@ -774,7 +699,9 @@ test.describe('Run Query Methods', () => {
 test.describe('Headers & Variables Panel', () => {
     test('Headers button toggles the headers panel', async ({ page }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
@@ -791,31 +718,33 @@ test.describe('Headers & Variables Panel', () => {
         // Click "+ Add Header" to add a row
         await page.getByRole('button', { name: '+ Add Header' }).click();
 
-        // Header input fields should appear with correct placeholders
         await expect(
-            page.locator('input[placeholder="e.g. Authorization"]').first(),
+            page.getByPlaceholder('e.g. Authorization').first(),
         ).toBeVisible();
 
         // Click headers button again to close
         await headersBtn.click();
         await page.waitForTimeout(300);
 
-        // Header inputs should be hidden
         await expect(
-            page.locator('input[placeholder="e.g. Authorization"]').first(),
+            page.getByPlaceholder('e.g. Authorization').first(),
         ).toBeHidden();
     });
 
     test('Variables button toggles the variables panel', async ({ page }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         const variablesBtn = page.getByRole('button', { name: 'Variables' });
 
         // Initially the variables editor (second cm-content) is hidden
-        const variablesEditor = page.locator('.cm-content').nth(1);
+        const variablesEditor = page
+            .getByLabel('Variables editor')
+            .locator('.cm-content');
 
         // Click to open variables
         await variablesBtn.click();
@@ -831,16 +760,10 @@ test.describe('Headers & Variables Panel', () => {
         await openExamplesTab(page);
 
         // Navigate to Getting Started folder (unambiguous name)
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
 
         // Click "Graph Counts" (has variables, returns node data)
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Graph Counts' })
-            .click();
+        await page.getByRole('button', { name: 'Graph Counts' }).click();
 
         // Update variables to use a real graph path
         await setVariablesContent(page, '{\n  "path": "vanilla/persistent"\n}');
@@ -857,7 +780,9 @@ test.describe('Headers & Variables Panel', () => {
         await page.getByRole('button', { name: /Run/ }).click();
 
         // Results should contain node/edge count data
-        const resultEditor = page.locator('.cm-content').last();
+        const resultEditor = page
+            .getByLabel('Results editor')
+            .locator('.cm-content');
         await expect(resultEditor).toContainText('data', { timeout: 15000 });
         await expect(resultEditor).toContainText('nodes');
     });
@@ -869,17 +794,18 @@ test.describe('Headers & Variables Panel', () => {
 test.describe('Prettify Button', () => {
     test('prettify button formats the query', async ({ page }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // Type an unformatted single-line query
-        const editor = page.locator('.cm-content').first();
+        const editor = page.getByLabel('Query editor').locator('.cm-content');
         await editor.click();
         await page.waitForTimeout(300);
-        const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
-        await page.keyboard.press(`${mod}+End`);
-        await page.keyboard.press(`${mod}+Shift+Home`);
+        await page.keyboard.press('ControlOrMeta+End');
+        await page.keyboard.press('ControlOrMeta+Shift+Home');
         await page.keyboard.press('Backspace');
         await page.waitForTimeout(200);
         await page.keyboard.type('{ graph(path:"test") { nodes { count } } }', {
@@ -911,12 +837,14 @@ test.describe('Persistence', () => {
         page,
     }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // Add a second tab
-        await page.getByRole('button', { name: '+' }).click();
+        await page.getByLabel('Add tab').click();
         await page.waitForTimeout(300);
 
         // Load a known query into the second tab via an example
@@ -926,42 +854,36 @@ test.describe('Persistence', () => {
             await toggleBtn.click();
         }
         await page
-            .locator('.MuiTab-root', { hasText: 'Examples' })
+            .getByRole('tab', { name: 'Examples' })
             .click({ timeout: 5000 });
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Getting Started' })
-            .click();
-        await page
-            .locator('.MuiListItemButton-root')
-            .filter({ hasText: 'Available Graphs' })
-            .click();
+        await page.getByRole('button', { name: 'Getting Started' }).click();
+        await page.getByRole('button', { name: 'Available Graphs' }).click();
 
         // Verify the editor has the namespaces query
-        await expect(page.locator('.cm-content').first()).toContainText(
-            'namespaces',
-        );
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toContainText('namespaces');
 
         // Count the tabs before refresh
-        const tabsBefore = await page
-            .getByRole('button', { name: '✕' })
-            .count();
+        const tabsBefore = await page.getByLabel(/^Close /).count();
         expect(tabsBefore).toBeGreaterThanOrEqual(2);
 
         // Refresh the page
         await page.reload();
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // Tabs should still be present (close buttons still visible)
-        const tabsAfter = await page.getByRole('button', { name: '✕' }).count();
+        const tabsAfter = await page.getByLabel(/^Close /).count();
         expect(tabsAfter).toBe(tabsBefore);
 
         // The active tab's query should still contain "namespaces"
-        await expect(page.locator('.cm-content').first()).toContainText(
-            'namespaces',
-        );
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toContainText('namespaces');
     });
 });
 
@@ -973,52 +895,49 @@ test.describe('Tab Rename', () => {
         page,
     }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // Default tab should be called "Query"
         const tabText = page
-            .locator('p')
-            .filter({ hasText: /^Query$/ })
-            .first();
+            .getByLabel('Query tabs')
+            .getByRole('tab', { name: 'Query' });
         await expect(tabText).toBeVisible();
 
         // Double-click the tab to start rename
         await tabText.dblclick();
 
         // An input should appear with the current title
-        const renameInput = page.locator('input[autoFocus]').first();
-        // Fallback: any focused input inside the tab bar
-        const input = (await renameInput.isVisible())
-            ? renameInput
-            : page.locator('input:focus').first();
-        await expect(input).toBeVisible({ timeout: 3000 });
+        const renameInput = page.getByLabel('Rename tab');
+        await expect(renameInput).toBeVisible({ timeout: 3000 });
 
         // Clear and type new name
-        await input.fill('My Custom Query');
-        await input.press('Enter');
+        await renameInput.fill('My Custom Query');
+        await renameInput.press('Enter');
 
         // Verify the new name is shown
         await expect(
             page
-                .locator('p')
-                .filter({ hasText: /^My Custom Query$/ })
-                .first(),
+                .getByLabel('Query tabs')
+                .getByRole('tab', { name: 'My Custom Query' }),
         ).toBeVisible();
 
         // Refresh the page
         await page.reload();
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
         // The renamed tab should still be there
         await expect(
             page
-                .locator('p')
-                .filter({ hasText: /^My Custom Query$/ })
-                .first(),
+                .getByLabel('Query tabs')
+                .getByRole('tab', { name: 'My Custom Query' }),
         ).toBeVisible();
     });
 });
@@ -1029,7 +948,9 @@ test.describe('Tab Rename', () => {
 test.describe('Tab-Scoped State', () => {
     test('headers and variables are local to each tab', async ({ page }) => {
         await page.goto('/playground');
-        await expect(page.locator('.cm-content').first()).toBeVisible({
+        await expect(
+            page.getByLabel('Query editor').locator('.cm-content'),
+        ).toBeVisible({
             timeout: 10000,
         });
 
@@ -1059,7 +980,7 @@ test.describe('Tab-Scoped State', () => {
         );
 
         // === Create Tab 2 ===
-        await page.getByRole('button', { name: '+', exact: true }).click();
+        await page.getByLabel('Add tab').click();
         await page.waitForTimeout(500);
 
         // Tab 2 is now active — headers panel is still open but shows Tab 2's state
@@ -1068,7 +989,9 @@ test.describe('Tab-Scoped State', () => {
         expect(await tab2HeaderInputs.count()).toBe(0);
 
         // Variables panel: Tab 2 should NOT have Tab 1's variables
-        const variablesEditor = page.locator('.cm-content').nth(1);
+        const variablesEditor = page
+            .getByLabel('Variables editor')
+            .locator('.cm-content');
         if (await variablesEditor.isVisible().catch(() => false)) {
             const varText = await variablesEditor.textContent();
             expect(varText).not.toContain('"tab": 1');
@@ -1078,11 +1001,10 @@ test.describe('Tab-Scoped State', () => {
         // Use locator that targets the tab's paragraph text next to a ✕ close button
         // (avoid matching Schema panel's "Query" button)
         const tab1 = page
-            .locator('p')
-            .filter({ hasText: /^Query$/ })
-            .first();
-        // Click the parent container (the tab div with onClick handler)
-        await tab1.locator('..').click();
+            .getByLabel('Query tabs')
+            .getByRole('tab', { name: 'Query', exact: true });
+        // Click the tab
+        await tab1.click();
         await page.waitForTimeout(500);
 
         // Tab 1 should still have its header
