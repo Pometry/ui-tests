@@ -223,6 +223,65 @@ test.describe('Schema Explorer — Navigation', () => {
             page.locator('.MuiChip-root').filter({ hasText: 'Graph' }).first(),
         ).toBeVisible();
     });
+
+    test('union type shows member types', async ({ page }) => {
+        await waitForSchemaReady(page);
+
+        // Switch to All Types view
+        await page
+            .locator('.MuiChip-root')
+            .filter({ hasText: /All Types/ })
+            .first()
+            .click();
+
+        // Search for the union type specifically
+        const searchInput = page.getByPlaceholder('Search types and fields...');
+        await searchInput.fill('NamespacedItem');
+        await page.waitForTimeout(500);
+
+        // Click the exact NamespacedItem (not CollectionOfNamespacedItem)
+        await page
+            .locator('.MuiListItemButton-root')
+            .filter({ hasText: /^NamespacedItem$/ })
+            .first()
+            .click();
+
+        // Should now be viewing NamespacedItem — breadcrumb should show it
+        await expect(
+            page
+                .locator('.MuiChip-root')
+                .filter({ hasText: 'NamespacedItem' })
+                .first(),
+        ).toBeVisible();
+
+        // Union member types should be listed
+        await expect(
+            page
+                .locator('.MuiListItemButton-root')
+                .filter({ hasText: 'Namespace' })
+                .first(),
+        ).toBeVisible();
+        await expect(
+            page
+                .locator('.MuiListItemButton-root')
+                .filter({ hasText: 'MetaGraph' })
+                .first(),
+        ).toBeVisible();
+
+        // Clicking a member type should navigate to it
+        await page
+            .locator('.MuiListItemButton-root')
+            .filter({ hasText: 'Namespace' })
+            .first()
+            .click();
+
+        await expect(
+            page
+                .locator('.MuiChip-root')
+                .filter({ hasText: 'Namespace' })
+                .first(),
+        ).toBeVisible();
+    });
 });
 
 // ─────────────────────────────────────────────────────────────────────
