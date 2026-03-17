@@ -945,36 +945,6 @@ test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
         'comprehensive-styling-selecting-highlighting.png',
     );
-
-    //clean up
-    await page.getByRole('button', { name: 'Selection' }).click();
-    await page
-        .getByRole('menuitem', { name: 'Clear current selection' })
-        .click();
-    await waitForLayoutToFinish(page);
-
-    await clickOnNode(page, 'Pedro');
-    await changeTab(page, 'Styling');
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
-    await page.getByRole('button', { name: 'Selection' }).click();
-    await page
-        .getByRole('menuitem', { name: 'Clear current selection' })
-        .click();
-    await waitForLayoutToFinish(page);
-    await changeTab(page, 'Styling');
-    await page.getByText('Company').click();
-    await page.getByRole('option', { name: 'Person' }).click();
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
-
-    await clickOnEdge(page, 'Pedro', 'Hamza');
-    await changeTab(page, 'Styling');
-    await page.waitForTimeout(100);
-    await page.getByText('Select Edge Layer').click();
-    await page.getByRole('option', { name: 'meets' }).click();
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.waitForTimeout(2000);
 });
 
 // skipping because it only works for one browser test, fails on other browser repeats (graph already exists after creating once in chromium)
