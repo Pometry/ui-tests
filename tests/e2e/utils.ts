@@ -301,6 +301,12 @@ export async function waitForLayoutToFinish(
     await page.waitForTimeout(2000);
 }
 
+export async function changeTab(page: Page, tabName: string) {
+    await page.getByRole('tab', { name: tabName, exact: true }).click();
+    // This is to wait for the animation for changing tabs to finish
+    await page.waitForTimeout(500);
+}
+
 export async function openTimeline(page: Page) {
     await page.getByRole('button', { name: 'Open timeline' }).click();
     // wait for animation to finish

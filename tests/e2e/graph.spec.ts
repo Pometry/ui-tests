@@ -1,6 +1,7 @@
 import { expect, Page } from '@playwright/test';
 import { test } from '../fixtures';
 import {
+    changeTab,
     clickOnEdge,
     clickOnNode,
     clickOnNodes,
@@ -20,12 +21,6 @@ async function fitView(page: Page) {
         .getByRole('button', { name: 'Fit all nodes within visible region' })
         .click();
     await waitForLayoutToFinish(page);
-}
-
-export async function changeTab(page: Page, tabName: string) {
-    await page.getByRole('tab', { name: tabName, exact: true }).click();
-    // This is to wait for the animation for changing tabs to finish
-    await page.waitForTimeout(500);
 }
 
 test('Close right hand side panel button and open again', async ({ page }) => {
@@ -862,8 +857,10 @@ test('catch console logs and errors', async ({ page }) => {
     expect(consoleLogs, 'Console logs found').toStrictEqual([]);
 });
 
-test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
-    test.setTimeout(100000);
+test('Comprehensive styling, selection, and highlighting', async ({
+    comprehensiveStylingPage: page,
+}) => {
+    test.setTimeout(60000);
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await fitView(page);
 
@@ -940,6 +937,7 @@ test('Comprehensive styling, selection, and highlighting', async ({ page }) => {
     await page.getByRole('option', { name: 'founds' }).click();
     await fillInStyling(page, { colourValue: 'FF6B6B' });
     await openTimeline(page);
+    await selectLayout(page, 'Arrange nodes in concentric circles');
     await fitView(page);
     await waitForLayoutToFinish(page);
     expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
