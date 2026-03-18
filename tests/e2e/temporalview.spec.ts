@@ -9,7 +9,7 @@ import {
 
 async function setupGraphPage(
     page: Page,
-    relativePath = 'graph?graphSource=vanilla/event&initialNodes=%5B%5D',
+    relativePath = 'graph/vanilla/event?initialNodes=%5B%5D',
 ) {
     await page.goto(`/${relativePath}`);
     await waitForLayoutToFinish(page);
