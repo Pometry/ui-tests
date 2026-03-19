@@ -83,7 +83,7 @@ const CANVAS_ELEMENT_POSITIONS = {
 };
 
 test('Close right hand side panel button and open again', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
 
     await page.getByRole('button', { name: 'Collapse panel' }).click();
     await expect(
@@ -98,7 +98,7 @@ test('Close right hand side panel button and open again', async ({ page }) => {
 });
 
 test('Click save as button opens save as dialog', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
     await page.getByRole('button', { name: 'Save graph as' }).click();
     await page.getByRole('button', { name: 'Cancel' }).waitFor();
     await expect(page.getByText('New Graph Name')).toBeVisible();
@@ -108,7 +108,7 @@ test('Click save as button opens save as dialog', async ({ page }) => {
 });
 
 test('Highlight founds then transfers', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
     await waitForLayoutToFinish(page);
     await openTimeline(page);
     await page.getByText('Relationships').waitFor();
@@ -1001,7 +1001,7 @@ test('catch console logs and errors', async ({ page }) => {
         }
     });
 
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
 
     expect(consoleErrors, 'Console errors found').toStrictEqual([]);
     expect(consoleLogs, 'Console logs found').toStrictEqual([]);
@@ -1018,9 +1018,7 @@ test.skip('save new graph with save as dialog', async ({ page }) => {
     await page.getByRole('button', { name: 'Confirm' }).click();
     await page.waitForLoadState('networkidle');
 
-    await page.waitForURL(
-        /\/graph\?graphSource=Test(\+|%20)Graph&initialNodes=%5B%5D/,
-    );
+    await page.waitForURL(/\/graph\/Test%20Graph\?initialNodes=%5B%5D/);
 
     await expect(page.locator('input')).toHaveValue('Test Graph');
 });

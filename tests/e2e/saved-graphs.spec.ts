@@ -98,7 +98,7 @@ test('Open graph by double clicking', async ({ page }) => {
     await navigateToSavedGraphsFolder(page, 'vanilla', 'table');
     await page.getByRole('cell', { name: 'event', exact: true }).dblclick();
     await expect(page).toHaveURL(
-        /\/graph\?graphSource=vanilla%2Fevent&initialNodes=%5B%5D/,
+        /\/graph\/vanilla\/event\?initialNodes=%5B%5D/,
     );
 });
 
@@ -115,7 +115,7 @@ test('Open graph by clicking open button on rhs panel', async ({ page }) => {
     await page.waitForSelector('text=Overview');
     await page.getByText('Overview').isVisible();
     await expect(page).toHaveURL(
-        /\/graph\?graphSource=vanilla%2Fevent&initialNodes=%5B%5D/,
+        /\/graph\/vanilla\/event\?initialNodes=%5B%5D/,
     );
 });
 
@@ -128,7 +128,7 @@ test('Check properties visible on right hand side and open graph from minimap pr
     await page.getByRole('button', { name: 'Open' }).nth(1).click();
     await waitForLayoutToFinish(page);
     await expect(page).toHaveURL(
-        /\/graph\?graphSource=vanilla%2Fevent&initialNodes=%5B%5D/,
+        /\/graph\/vanilla\/event\?initialNodes=%5B%5D/,
     );
 });
 
