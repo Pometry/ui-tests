@@ -377,6 +377,7 @@ export async function fillInStyling(
 }
 
 interface GraphState {
+    highlighted: { id: string }[];
     selected: string[];
     nodes: {
         id: string;
@@ -390,7 +391,15 @@ export async function getGraphState(page: Page): Promise<GraphState> {
         const graph = (window as BrowserWindow).__G6_GRAPH__;
         if (!graph) throw new Error('__G6_GRAPH__ not found on window');
         const data = graph.getData();
+        const nodesDisabled = data.nodes.some((n) =>
+            n.states?.includes('disabled'),
+        );
         return {
+            highlighted: nodesDisabled
+                ? data.nodes
+                      .filter((n) => !n.states?.includes('disabled'))
+                      .map((n) => ({ id: n.id }))
+                : [],
             selected: data.nodes
                 .filter((n) => n.states?.includes('selected'))
                 .map((n) => n.id),

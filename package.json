@@ -1,6 +1,9 @@
 {
     "name": "ui-tests",
     "version": "0.0.1",
+    "exports": {
+        "./e2e-utils": "./tests/e2e/utils.ts"
+    },
     "description": "",
     "homepage": "https://github.com/Pometry/ui-tests",
     "bugs": {
