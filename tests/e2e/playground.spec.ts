@@ -827,6 +827,41 @@ test.describe('Prettify Button', () => {
         expect(textAfter).toContain('nodes');
         expect(textAfter).toContain('count');
     });
+
+    test('prettify preserves # comments', async ({ page }) => {
+        await page.goto('/playground');
+
+        const editor = page.getByLabel('Query editor').locator('.cm-content');
+        await expect(editor).toBeVisible({ timeout: 10000 });
+
+        // Clear editor and type a query with comments
+        await editor.click();
+        await page.waitForTimeout(300);
+        await page.keyboard.press('ControlOrMeta+End');
+        await page.keyboard.press('ControlOrMeta+Shift+Home');
+        await page.keyboard.press('Backspace');
+        await page.waitForTimeout(200);
+
+        const queryWithComments = [
+            '# Fetch graph info',
+            '{ graph(path:"test") {',
+            '  # Get node count',
+            '  nodes { count }',
+            '} }',
+        ].join('\n');
+        await page.keyboard.type(queryWithComments, { delay: 5 });
+
+        // Click prettify
+        await page.getByTitle('Prettify query').click();
+        await page.waitForTimeout(500);
+
+        // Comments should still be present after formatting
+        const textAfter = await editor.textContent();
+        expect(textAfter).toContain('# Fetch graph info');
+        expect(textAfter).toContain('# Get node count');
+        expect(textAfter).toContain('graph');
+        expect(textAfter).toContain('nodes');
+    });
 });
 
 // ─────────────────────────────────────────────────────────────────────
