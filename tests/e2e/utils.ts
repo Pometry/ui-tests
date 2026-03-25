@@ -23,6 +23,13 @@ type BrowserWindow = Window & {
     };
 };
 
+export async function fitView(page: Page) {
+    await page
+        .getByRole('button', { name: 'Fit all nodes within visible region' })
+        .click();
+    await waitForLayoutToFinish(page);
+}
+
 async function getNodePosition(
     page: Page,
     displayName: string,
@@ -387,27 +394,34 @@ interface GraphState {
 }
 
 export async function getGraphState(page: Page): Promise<GraphState> {
-    return page.evaluate(() => {
-        const graph = (window as BrowserWindow).__G6_GRAPH__;
-        if (!graph) throw new Error('__G6_GRAPH__ not found on window');
-        const data = graph.getData();
-        const nodesDisabled = data.nodes.some((n) =>
-            n.states?.includes('disabled'),
-        );
-        return {
-            highlighted: nodesDisabled
-                ? data.nodes
-                      .filter((n) => !n.states?.includes('disabled'))
-                      .map((n) => ({ id: n.id }))
-                : [],
-            selected: data.nodes
-                .filter((n) => n.states?.includes('selected'))
-                .map((n) => n.id),
-            nodes: data.nodes.map((n) => ({
-                id: n.id,
-                colour: n.style?.fill,
-                size: n.style?.size,
-            })),
-        };
-    });
+    const handle = await page.waitForFunction(
+        () => {
+            const graph = (window as BrowserWindow).__G6_GRAPH__;
+            if (!graph) return undefined;
+            const data = graph.getData();
+            const anyDisabled = data.nodes.some((n) =>
+                n.states?.includes('disabled'),
+            );
+            console.log(
+                data.nodes.map((n) => ({ id: n.id, states: n.states })),
+            );
+            return {
+                highlighted: anyDisabled
+                    ? data.nodes
+                          .filter((n) => !n.states?.includes('disabled'))
+                          .map((n) => ({ id: n.id }))
+                    : [],
+                selected: data.nodes
+                    .filter((n) => n.states?.includes('selected'))
+                    .map((n) => n.id),
+                nodes: data.nodes.map((n) => ({
+                    id: n.id,
+                    colour: n.style?.fill,
+                    size: n.style?.size,
+                })),
+            };
+        },
+        { timeout: 10000 },
+    );
+    return handle.jsonValue() as Promise<GraphState>;
 }
