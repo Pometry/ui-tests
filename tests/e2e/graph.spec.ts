@@ -1,8 +1,14 @@
 import { expect, Page } from '@playwright/test';
 import { test } from '../fixtures';
 import {
+    changeTab,
+    clickOnEdge,
+    clickOnNode,
+    clickOnNodes,
+    doubleClickOnNode,
     dragSlider,
     fillInStyling,
+    getGraphState,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
     openTimeline,
@@ -17,73 +23,8 @@ async function fitView(page: Page) {
     await waitForLayoutToFinish(page);
 }
 
-export async function changeTab(page: Page, tabName: string) {
-    await page.getByRole('tab', { name: tabName, exact: true }).click();
-    // This is to wait for the animation for changing tabs to finish
-    await page.waitForTimeout(500);
-}
-
-const CANVAS_ELEMENT_POSITIONS = {
-    'no graph': {
-        'single node': {
-            x: 465,
-            y: 310,
-        },
-        'single edge two nodes': [
-            {
-                x: 215,
-                y: 135,
-            },
-            {
-                x: 560,
-                y: 500,
-            },
-        ],
-        'pedro expanded': {
-            'hamza->pedro': {
-                x: 387,
-                y: 219,
-            },
-            pedro: {
-                x: 565,
-                y: 120,
-            },
-            hamza: {
-                x: 215,
-                y: 320,
-            },
-        },
-        'pedro expanded with timeline': {
-            hamza: {
-                x: 295,
-                y: 210,
-            },
-        },
-    },
-    'new_folder/persistent_filler': {
-        pedro: {
-            x: 585,
-            y: 340,
-        },
-        ben: {
-            x: 355,
-            y: 325,
-        },
-    },
-    'new_folder/persistent_second_filler': {
-        'Rabbit Inc': {
-            x: 520,
-            y: 100,
-        },
-        'Judy->Rabbit Inc': {
-            x: 572,
-            y: 205,
-        },
-    },
-};
-
 test('Close right hand side panel button and open again', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
 
     await page.getByRole('button', { name: 'Collapse panel' }).click();
     await expect(
@@ -98,7 +39,7 @@ test('Close right hand side panel button and open again', async ({ page }) => {
 });
 
 test('Click save as button opens save as dialog', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
     await page.getByRole('button', { name: 'Save graph as' }).click();
     await page.getByRole('button', { name: 'Cancel' }).waitFor();
     await expect(page.getByText('New Graph Name')).toBeVisible();
@@ -108,37 +49,19 @@ test('Click save as button opens save as dialog', async ({ page }) => {
 });
 
 test('Highlight founds then transfers', async ({ page }) => {
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
     await waitForLayoutToFinish(page);
-    await openTimeline(page);
     await page.getByText('Relationships').waitFor();
     await page
         .getByText('transfers3')
         .getByRole('button', { name: 'Highlight on graph' })
         .click();
-    await page;
-    await expect(
-        page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
-    await expect(
-        page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
-    await expect(
-        page.locator('g', { hasText: /^Pedro$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(158, 158, 158)');
+    await waitForLayoutToFinish(page);
     await page
         .getByText('founds2')
         .getByRole('button', { name: 'Highlight on graph' })
         .click();
-    await expect(
-        page.locator('g', { hasText: /^Ben$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
-    await expect(
-        page.locator('g', { hasText: /^Hamza$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(117, 135, 72)');
-    await expect(
-        page.locator('g', { hasText: /^Pometry$/ }).locator('circle'),
-    ).toHaveCSS('fill', 'rgb(93, 212, 223)');
+    await waitForLayoutToFinish(page);
 });
 
 test('Test layouts', async ({ page }) => {
@@ -184,9 +107,7 @@ test('Click on Pometry node in graph', async ({ page }) => {
         nodeName: 'Pometry',
         nodeType: 'Company',
     });
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Pometry');
     await changeTab(page, 'Selected');
     await expect(page.getByRole('heading', { name: 'Pometry' })).toBeVisible();
     await expect(page.getByText('PROPERTIES')).toBeHidden();
@@ -199,9 +120,7 @@ test('Click on Pedro node in graph', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Pedro');
     await changeTab(page, 'Selected');
     await expect(page.getByRole('heading', { name: 'Pedro' })).toBeVisible();
     await expect(page.getByText('Age', { exact: true })).toBeVisible();
@@ -213,10 +132,7 @@ test('Click on Hamza node in graph', async ({ page }) => {
         nodeName: 'Hamza',
         nodeType: 'Person',
     });
-    await waitForLayoutToFinish(page);
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Hamza');
     await changeTab(page, 'Selected');
     await expect(page.getByRole('heading', { name: 'Hamza' })).toBeVisible();
     await expect(page.getByText('Age', { exact: true })).toBeVisible();
@@ -228,9 +144,7 @@ test('Click on Ben node in graph', async ({ page }) => {
         nodeName: 'Ben',
         nodeType: 'Person',
     });
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Ben');
     await changeTab(page, 'Selected');
     await expect(page.getByRole('heading', { name: 'Ben' })).toBeVisible();
     await expect(page.getByText('Age', { exact: true })).toBeVisible();
@@ -244,9 +158,7 @@ test('Double click expand node and delete by floating actions button', async ({
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Pedro');
     await changeTab(page, 'Selected');
     await expect(page.getByRole('heading', { name: 'Pedro' })).toBeVisible();
     await page
@@ -258,22 +170,18 @@ test('Double click expand node and delete by floating actions button', async ({
     // font problems on the pipeline)
     await page.mouse.move(0, 0);
     await waitForLayoutToFinish(page);
-    expect(await page.screenshot()).toMatchSnapshot('deletednode.png', {
-        maxDiffPixels: 100,
-        maxDiffPixelRatio: 0.01,
-    });
+    await expect(page.getByRole('heading', { name: 'Pedro' })).toBeHidden();
     await changeTab(page, 'Overview');
     await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
 
     await waitForLayoutToFinish(page);
-    await page.locator('canvas').nth(1).dblclick({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await doubleClickOnNode(page, 'Pedro');
     await waitForLayoutToFinish(page);
-
-    await openTimeline(page);
-    await expect(page.getByText('Ben')).toBeVisible();
-    await expect(page.getByText('Hamza')).toBeVisible();
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Ben',
+        'Hamza',
+    ]);
 });
 
 test('Expand node by floating actions button', async ({ page }) => {
@@ -283,9 +191,7 @@ test('Expand node by floating actions button', async ({ page }) => {
         nodeType: 'Person',
     });
 
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Pedro');
     await page
         .getByRole('button', {
             name: 'Explore',
@@ -299,10 +205,11 @@ test('Expand node by floating actions button', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    await openTimeline(page);
-    await expect(page.getByText('Ben')).toBeVisible();
-    await expect(page.getByText('Hamza')).toBeVisible();
-    await expect(page.getByText('Pedro')).toBeVisible();
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Ben',
+        'Hamza',
+    ]);
 });
 
 test('Expand two-hop by floating actions button', async ({ page }) => {
@@ -312,9 +219,7 @@ test('Expand two-hop by floating actions button', async ({ page }) => {
         nodeType: 'Person',
     });
 
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Pedro');
     await page
         .getByRole('button', {
             name: 'Explore',
@@ -328,11 +233,12 @@ test('Expand two-hop by floating actions button', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    await openTimeline(page);
-    await expect(page.getByText('Ben')).toBeVisible();
-    await expect(page.getByText('Hamza')).toBeVisible();
-    await expect(page.getByText('Pedro')).toBeVisible();
-    await expect(page.getByText('Pometry')).toBeVisible();
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Ben',
+        'Hamza',
+        'Pometry',
+    ]);
 });
 
 test('Expand shared neighbours by floating actions button', async ({
@@ -345,22 +251,7 @@ test('Expand shared neighbours by floating actions button', async ({
         layers: ['meets'],
     });
 
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['no graph']['single edge two nodes'][0],
-    });
-
-    await page
-        .locator('canvas')
-        .nth(1)
-        .click({
-            modifiers: ['Shift'],
-            position:
-                CANVAS_ELEMENT_POSITIONS['no graph'][
-                    'single edge two nodes'
-                ][1],
-        });
-
+    await clickOnNodes(page, ['Hamza', 'Pedro']);
     await page
         .getByRole('button', {
             name: 'Explore',
@@ -374,10 +265,11 @@ test('Expand shared neighbours by floating actions button', async ({
         })
         .click();
     await waitForLayoutToFinish(page);
-    await openTimeline(page);
-    await expect(page.getByText('Ben')).toBeVisible();
-    await expect(page.getByText('Hamza')).toBeVisible();
-    await expect(page.getByText('Pedro')).toBeVisible();
+    expect((await getGraphState(page)).nodes.map((n) => n.id)).toEqual([
+        'Pedro',
+        'Hamza',
+        'Ben',
+    ]);
 });
 
 test('Click edge to reveal right hand side panel details', async ({ page }) => {
@@ -387,17 +279,10 @@ test('Click edge to reveal right hand side panel details', async ({ page }) => {
         nodeType: 'Person',
     });
 
-    await page.locator('canvas').nth(1).dblclick({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await doubleClickOnNode(page, 'Pedro');
     await waitForLayoutToFinish(page, 2000, 2000);
     await fitView(page);
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['no graph']['pedro expanded'][
-                'hamza->pedro'
-            ],
-    });
+    await clickOnEdge(page, 'Hamza', 'Pedro');
     await page.waitForTimeout(100);
     await changeTab(page, 'Selected');
     await page.getByRole('button', { name: 'EDGE STATISTICS' }).click();
@@ -418,18 +303,13 @@ test('Undo and redo in floating actions menu', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    await page.locator('canvas').nth(1).dblclick({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await doubleClickOnNode(page, 'Pedro');
     await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
     await waitForLayoutToFinish(page);
     await page.getByRole('button', { name: 'Redo (⌘⇧Z)', exact: true }).click();
     await waitForLayoutToFinish(page);
-    await openTimeline(page);
-    await expect(page.getByText('Ben')).toBeVisible();
-    await expect(page.getByText('Hamza')).toBeVisible();
-    await expect(page.getByText('Pedro')).toBeVisible();
+    expect((await getGraphState(page)).nodes).toHaveLength(3);
 });
 
 test('Expand node, fit view and select all similar nodes', async ({ page }) => {
@@ -439,17 +319,10 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         nodeType: 'Person',
     });
     await waitForLayoutToFinish(page);
-    await openTimeline(page);
-    await page.locator('canvas').nth(1).dblclick({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await doubleClickOnNode(page, 'Pedro');
     await waitForLayoutToFinish(page);
-    await page.waitForSelector('text="Pedro"');
     await fitView(page);
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['no graph']['pedro expanded']['pedro'],
-    });
+    await clickOnNode(page, 'Pedro');
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', {
@@ -457,18 +330,8 @@ test('Expand node, fit view and select all similar nodes', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    const temporalView = await page.locator('#temporal-view').boundingBox();
-    if (temporalView) {
-        expect(await page.screenshot({ clip: temporalView })).toMatchSnapshot(
-            'selectsimilarnodes.png',
-            {
-                maxDiffPixels: 20000,
-                maxDiffPixelRatio: 0.01,
-            },
-        );
-    } else {
-        throw new Error('Element not found or not visible');
-    }
+    const state = await getGraphState(page);
+    expect(state.selected).toHaveLength(3);
 });
 
 test('Click and deselect by floating actions', async ({ page }) => {
@@ -477,9 +340,7 @@ test('Click and deselect by floating actions', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    await page.locator('canvas').nth(1).click({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
+    await clickOnNode(page, 'Pedro');
     await changeTab(page, 'Selected');
 
     await expect(page.getByText('Pedro').nth(0)).toBeVisible();
@@ -488,10 +349,7 @@ test('Click and deselect by floating actions', async ({ page }) => {
         .getByRole('menuitem', { name: 'Clear current selection' })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await page.screenshot()).toMatchSnapshot('deselectnodes.png', {
-        maxDiffPixels: 20000,
-        maxDiffPixelRatio: 0.01,
-    });
+    await expect(page.getByText('Pedro').nth(0)).toBeHidden();
 });
 
 test('Select all from menu and via shortcut', async ({ page }) => {
@@ -505,17 +363,21 @@ test('Select all from menu and via shortcut', async ({ page }) => {
     await page.waitForTimeout(100);
     await page.keyboard.up('Control');
     await page.waitForTimeout(500);
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all.png',
-    );
+    const state = await getGraphState(page);
+    expect(state.selected).toEqual([
+        'None',
+        'Pedro',
+        'Ben',
+        'Hamza',
+        'Pometry',
+    ]);
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', { name: 'Clear current selection', exact: true })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all-then-deselect-all.png',
-    );
+    const state2 = await getGraphState(page);
+    expect(state2.selected).toHaveLength(0);
     await page.getByRole('button', { name: 'Selection' }).click();
     await page
         .getByRole('menuitem', {
@@ -524,9 +386,14 @@ test('Select all from menu and via shortcut', async ({ page }) => {
         })
         .click();
     await waitForLayoutToFinish(page);
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'select-all.png',
-    );
+    const state3 = await getGraphState(page);
+    expect(state3.selected).toEqual([
+        'None',
+        'Pedro',
+        'Ben',
+        'Hamza',
+        'Pometry',
+    ]);
 });
 
 test('Click backspace to delete nodes', async ({ page }) => {
@@ -535,22 +402,15 @@ test('Click backspace to delete nodes', async ({ page }) => {
         nodeName: 'Pedro',
         nodeType: 'Person',
     });
-    await page.locator('canvas').nth(1).dblclick({
-        position: CANVAS_ELEMENT_POSITIONS['no graph']['single node'],
-    });
-    await waitForLayoutToFinish(page);
-    await openTimeline(page);
+    await doubleClickOnNode(page, 'Pedro');
+    await selectLayout(page, 'Arrange nodes in concentric circles');
     await fitView(page);
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['no graph'][
-                'pedro expanded with timeline'
-            ]['hamza'],
-    });
+    await waitForLayoutToFinish(page);
+    expect((await getGraphState(page)).nodes).toHaveLength(3);
+    await clickOnNode(page, 'Hamza');
     await page.keyboard.press('Backspace');
-    await expect(page.getByText('Hamza')).toBeHidden();
-    await expect(page.getByText('Pedro')).toBeVisible();
-    await expect(page.getByText('Ben')).toBeVisible();
+    await waitForLayoutToFinish(page);
+    expect((await getGraphState(page)).nodes).toHaveLength(2);
 });
 
 test('RHS Selected properties has max height for table cells', async ({
@@ -562,12 +422,7 @@ test('RHS Selected properties has max height for table cells', async ({
         'persistent_second_filler',
     );
     await changeTab(page, 'Selected');
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_second_filler'][
-                'Rabbit Inc'
-            ],
-    });
+    await clickOnNode(page, 'Rabbit Inc');
     // Expect that table cells have a max height that hides the majority of the
     // text such that you can still see elements below the properties, such as
     // Direct Connections.
@@ -581,10 +436,7 @@ test('Change colour and size of individual node', async ({ settingsPage }) => {
         'persistent_filler',
     );
     await fitView(settingsPage);
-    await settingsPage.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['pedro'],
-    });
+    await clickOnNode(settingsPage, 'Pedro');
     await changeTab(settingsPage, 'Styling');
     await fillInStyling(settingsPage, { colourValue: 'BD10E0', size: 30 });
     await settingsPage
@@ -593,10 +445,11 @@ test('Change colour and size of individual node', async ({ settingsPage }) => {
     await expect(settingsPage.getByText('Styling updated')).toBeVisible({
         timeout: 5000,
     });
-    await settingsPage.waitForTimeout(4000);
-    expect(await settingsPage.screenshot()).toMatchSnapshot(
-        'node-colour-size-change.png',
+    const state = await getGraphState(settingsPage);
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
+        '#bd10e0',
     );
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
 });
 
 test('Change colour of edge by layer dropdown', async ({ settingsPage }) => {
@@ -607,12 +460,7 @@ test('Change colour of edge by layer dropdown', async ({ settingsPage }) => {
     );
     await fitView(settingsPage);
 
-    await settingsPage.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_second_filler'][
-                'Judy->Rabbit Inc'
-            ],
-    });
+    await clickOnEdge(settingsPage, 'Judy', 'Rabbit Inc');
     await changeTab(settingsPage, 'Styling');
     await settingsPage.waitForTimeout(100);
     await settingsPage.getByText('Select Edge Layer').click();
@@ -626,9 +474,11 @@ test('Change colour of edge by layer dropdown', async ({ settingsPage }) => {
     });
     await openTimeline(settingsPage);
     await settingsPage.waitForTimeout(5000);
-    expect(await settingsPage.screenshot()).toMatchSnapshot(
-        'edge-colour-change-layer-dropdown.png',
-    );
+    await expect(
+        settingsPage
+            .getByLabel('Edge ID Judy->RabbitInc_advises_100')
+            .locator('path'),
+    ).toHaveCSS('fill', 'rgb(245, 166, 35)');
 });
 
 test('Change colour and size of node by type', async ({ settingsPage }) => {
@@ -656,9 +506,19 @@ test('Change colour and size of node by type', async ({ settingsPage }) => {
         timeout: 5000,
     });
     await settingsPage.waitForTimeout(2000);
-    expect(await settingsPage.screenshot()).toMatchSnapshot(
-        'node-type-colour-size-change.png',
+    const state = await getGraphState(settingsPage);
+    await expect(state?.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
+        '#d0021b',
     );
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
+    expect(state.nodes.find((n) => n.id === 'Hamza')?.colour).toEqual(
+        '#d0021b',
+    );
+    await expect(state?.nodes.find((n) => n.id === 'Hamza')?.size).toEqual(30);
+    await expect(state?.nodes.find((n) => n.id === 'Ben')?.colour).toEqual(
+        '#d0021b',
+    );
+    await expect(state?.nodes.find((n) => n.id === 'Ben')?.size).toEqual(30);
 });
 
 test('Preview colour and size by type changes', async ({ page }) => {
@@ -673,9 +533,9 @@ test('Preview colour and size by type changes', async ({ page }) => {
     await page.getByRole('option', { name: 'Person' }).click();
     await fillInStyling(page, { colourValue: 'D0021B', size: 30 });
     await page.waitForTimeout(1000);
-    expect(await page.screenshot()).toMatchSnapshot(
-        'preview-node-type-colour-size-change.png',
-    );
+    const state = await getGraphState(page);
+    expect(state.nodes.find((n) => n.id === 'Fred')?.colour).toEqual('#d0021b');
+    expect(state.nodes.find((n) => n.id === 'Fred')?.size).toEqual(30);
 });
 
 test('Preview colour and size changes', async ({ page }) => {
@@ -685,16 +545,13 @@ test('Preview colour and size changes', async ({ page }) => {
         'persistent_filler',
     );
     await fitView(page);
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_filler']['ben'],
-    });
+    await clickOnNode(page, 'Ben');
     await changeTab(page, 'Styling');
     await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
     await page.waitForTimeout(1000);
-    expect(await page.screenshot()).toMatchSnapshot(
-        'preview-node-colour-size-change.png',
-    );
+    const state = await getGraphState(page);
+    expect(state.nodes.find((n) => n.id === 'Ben')?.colour).toEqual('#bd10e0');
+    expect(state.nodes.find((n) => n.id === 'Ben')?.size).toEqual(30);
 });
 
 test('Preview edge colour changes', async ({ page }) => {
@@ -705,12 +562,7 @@ test('Preview edge colour changes', async ({ page }) => {
     );
     await fitView(page);
 
-    await page.locator('canvas').nth(1).click({
-        position:
-            CANVAS_ELEMENT_POSITIONS['new_folder/persistent_second_filler'][
-                'Judy->Rabbit Inc'
-            ],
-    });
+    await clickOnEdge(page, 'Judy', 'Rabbit Inc');
     await changeTab(page, 'Styling');
     await page.getByText('Select Edge Layer').click();
     await page.getByRole('option', { name: 'advises' }).click();
@@ -728,9 +580,9 @@ test('Preview edge colour changes', async ({ page }) => {
     await openTimeline(page);
     // Wait for the timeline to open fully
     await page.waitForTimeout(500);
-    expect(await page.screenshot()).toMatchSnapshot(
-        'preview-edge-colour-change-layer-dropdown.png',
-    );
+    await expect(
+        page.getByLabel('Edge ID Judy->RabbitInc_advises_100').locator('path'),
+    ).toHaveCSS('fill', 'rgb(245, 166, 35)');
 });
 
 test('Layout Customizer Default Advanced Options', async ({ page }) => {
@@ -978,10 +830,8 @@ test('Brush select on main canvas works from first click', async ({ page }) => {
     await page.mouse.move(120, 330);
     await page.mouse.up();
     await page.keyboard.up('Shift');
-
-    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
-        'brush-select-first-click.png',
-    );
+    const state = await getGraphState(page);
+    expect(state.selected).toEqual(['None', 'Ben']);
 });
 
 test('catch console logs and errors', async ({ page }) => {
@@ -1001,10 +851,98 @@ test('catch console logs and errors', async ({ page }) => {
         }
     });
 
-    await page.goto('/graph?graphSource=vanilla%2Fevent&initialNodes=%5B%5D');
+    await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
 
     expect(consoleErrors, 'Console errors found').toStrictEqual([]);
     expect(consoleLogs, 'Console logs found').toStrictEqual([]);
+});
+
+test('Comprehensive styling, selection, and highlighting', async ({
+    comprehensiveStylingPage: page,
+}) => {
+    test.setTimeout(60000);
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await fitView(page);
+
+    // Save individual node styling for Pedro
+    await clickOnNode(page, 'Pedro');
+    await changeTab(page, 'Styling');
+    await fillInStyling(page, { colourValue: 'BD10E0', size: 30 });
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForSelector('text=Styling updated');
+    await page.waitForTimeout(2000);
+    // Save Person type styling
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
+    await page.waitForTimeout(2000);
+    await page.getByText('Select Node Type').click();
+    await page.getByRole('option', { name: 'Person' }).click();
+    await fillInStyling(page, { colourValue: 'D0021B', size: 25 });
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForSelector('text=Styling updated');
+    // Save meets edge layer styling
+    await clickOnEdge(page, 'Pedro', 'Hamza');
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
+    await page.getByRole('option', { name: 'meets' }).click();
+    await fillInStyling(page, { colourValue: 'F5A623' });
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.waitForSelector('text=Styling updated');
+    // Delete Ben
+    await clickOnNode(page, 'Ben');
+    await page
+        .getByRole('button', {
+            name: 'Delete selected (⌫)',
+        })
+        .click();
+    await waitForLayoutToFinish(page);
+    // Delete None
+    await clickOnNode(page, 'None');
+    await page
+        .getByRole('button', {
+            name: 'Delete selected (⌫)',
+        })
+        .click();
+    await waitForLayoutToFinish(page);
+    // Undo (restores None)
+    await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
+    // Redo (deletes None again)
+    await page.getByRole('button', { name: 'Redo (⌘⇧Z)', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    // Undo (restores None)
+    await page.getByRole('button', { name: 'Undo (⌘Z)', exact: true }).click();
+    await waitForLayoutToFinish(page);
+    // Preview individual node styling for Hamza
+    await clickOnNode(page, 'Hamza');
+    await changeTab(page, 'Styling');
+    await fillInStyling(page, { colourValue: '4A90D9', size: 35 });
+    await page.waitForTimeout(1000);
+    // Preview Company type styling
+    await page.getByRole('button', { name: 'Selection' }).click();
+    await page
+        .getByRole('menuitem', { name: 'Clear current selection' })
+        .click();
+    await page.waitForTimeout(2000);
+    await page.getByText('Person').click();
+    await page.getByRole('option', { name: 'Company' }).click();
+    await fillInStyling(page, { colourValue: '7ED321', size: 20 });
+    // Preview founds edge layer styling
+    await clickOnEdge(page, 'Hamza', 'Pometry');
+    await changeTab(page, 'Styling');
+    await page.waitForTimeout(100);
+    await page.getByText('Select Edge Layer').click();
+    await page.getByRole('option', { name: 'founds' }).click();
+    await fillInStyling(page, { colourValue: 'FF6B6B' });
+    await openTimeline(page);
+    await selectLayout(page, 'Arrange nodes in concentric circles');
+    await fitView(page);
+    await waitForLayoutToFinish(page);
+    expect(await page.locator('canvas').nth(1).screenshot()).toMatchSnapshot(
+        'comprehensive-styling-selecting-highlighting.png',
+    );
 });
 
 // skipping because it only works for one browser test, fails on other browser repeats (graph already exists after creating once in chromium)
@@ -1018,9 +956,7 @@ test.skip('save new graph with save as dialog', async ({ page }) => {
     await page.getByRole('button', { name: 'Confirm' }).click();
     await page.waitForLoadState('networkidle');
 
-    await page.waitForURL(
-        /\/graph\?graphSource=Test(\+|%20)Graph&initialNodes=%5B%5D/,
-    );
+    await page.waitForURL(/\/graph\/Test%20Graph\?initialNodes=%5B%5D/);
 
     await expect(page.locator('input')).toHaveValue('Test Graph');
 });

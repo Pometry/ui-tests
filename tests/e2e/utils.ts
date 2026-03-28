@@ -1,5 +1,104 @@
 import { expect, Locator, Page } from '@playwright/test';
 
+interface G6NodeData {
+    id: string;
+    displayName: string;
+    states?: string[];
+    style?: {
+        fill?: string;
+        size?: number;
+    };
+}
+interface G6EdgeData {
+    id?: string;
+    source: string;
+    target: string;
+}
+type BrowserWindow = Window & {
+    __TESTING_ENABLED__?: boolean;
+    __G6_GRAPH__?: {
+        getData(): { nodes: G6NodeData[]; edges: G6EdgeData[] };
+        getElementPosition(id: string): [number, number];
+        getViewportByCanvas(point: [number, number]): [number, number];
+    };
+};
+
+async function getNodePosition(
+    page: Page,
+    displayName: string,
+): Promise<{ x: number; y: number }> {
+    await page.waitForFunction(
+        (name) => {
+            const graph = (window as BrowserWindow).__G6_GRAPH__;
+            return !!(
+                graph &&
+                graph.getData().nodes.some((n) => n.displayName === name)
+            );
+        },
+        displayName,
+        { timeout: 10000 },
+    );
+
+    const position = await page.evaluate((name) => {
+        const graph = (window as BrowserWindow).__G6_GRAPH__;
+        const node = graph?.getData().nodes.find((n) => n.displayName === name);
+        if (!node || !graph) return null;
+        const canvasPoint = graph.getElementPosition(node.id);
+        const vp = graph.getViewportByCanvas(canvasPoint);
+        return { x: vp[0], y: vp[1] };
+    }, displayName);
+    if (!position) {
+        throw new Error(
+            `Failed to get canvas position for node "${displayName}"`,
+        );
+    }
+    return position;
+}
+
+export async function clickOnNode(
+    page: Page,
+    displayName: string,
+    options?: { modifiers?: ('Shift' | 'Control' | 'Meta' | 'Alt')[] },
+) {
+    const position = await getNodePosition(page, displayName);
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({ position, modifiers: options?.modifiers });
+}
+
+export async function doubleClickOnNode(page: Page, displayName: string) {
+    const position = await getNodePosition(page, displayName);
+    await page.locator('canvas').nth(1).dblclick({ position });
+}
+
+/** Click the first node normally, then Shift-click the rest to multi-select. */
+export async function clickOnNodes(page: Page, displayNames: string[]) {
+    if (displayNames.length === 0) return;
+    await clickOnNode(page, displayNames[0]);
+    for (const name of displayNames.slice(1)) {
+        await clickOnNode(page, name, { modifiers: ['Shift'] });
+    }
+}
+
+/** Click the midpoint of an edge identified by its src and dst node display names. */
+export async function clickOnEdge(
+    page: Page,
+    srcDisplayName: string,
+    dstDisplayName: string,
+    options?: { modifiers?: ('Shift' | 'Control' | 'Meta' | 'Alt')[] },
+) {
+    const [src, dst] = await Promise.all([
+        getNodePosition(page, srcDisplayName),
+        getNodePosition(page, dstDisplayName),
+    ]);
+    const position = { x: (src.x + dst.x) / 2, y: (src.y + dst.y) / 2 };
+    await page
+        .locator('canvas')
+        .nth(1)
+        .click({ position, modifiers: options?.modifiers });
+}
+
 export async function fillInCondition(
     page: Page,
     condition: {
@@ -202,6 +301,12 @@ export async function waitForLayoutToFinish(
     await page.waitForTimeout(2000);
 }
 
+export async function changeTab(page: Page, tabName: string) {
+    await page.getByRole('tab', { name: tabName, exact: true }).click();
+    // This is to wait for the animation for changing tabs to finish
+    await page.waitForTimeout(500);
+}
+
 export async function openTimeline(page: Page) {
     await page.getByRole('button', { name: 'Open timeline' }).click();
     // wait for animation to finish
@@ -269,4 +374,31 @@ export async function fillInStyling(
         await sizeInput.fill('');
         await sizeInput.fill(size.toString());
     }
+}
+
+interface GraphState {
+    selected: string[];
+    nodes: {
+        id: string;
+        colour: string | undefined;
+        size: number | undefined;
+    }[];
+}
+
+export async function getGraphState(page: Page): Promise<GraphState> {
+    return page.evaluate(() => {
+        const graph = (window as BrowserWindow).__G6_GRAPH__;
+        if (!graph) throw new Error('__G6_GRAPH__ not found on window');
+        const data = graph.getData();
+        return {
+            selected: data.nodes
+                .filter((n) => n.states?.includes('selected'))
+                .map((n) => n.id),
+            nodes: data.nodes.map((n) => ({
+                id: n.id,
+                colour: n.style?.fill,
+                size: n.style?.size,
+            })),
+        };
+    });
 }
