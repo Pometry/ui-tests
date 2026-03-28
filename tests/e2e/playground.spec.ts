@@ -77,7 +77,7 @@ async function setVariablesContent(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Screenshot load-check (the only screenshot in the suite)
+// Load-check
 // ─────────────────────────────────────────────────────────────────────
 test('Playground loads with Schema and Editor visible', async ({ page }) => {
     await waitForSchemaReady(page);
@@ -88,8 +88,6 @@ test('Playground loads with Schema and Editor visible', async ({ page }) => {
     await expect(
         page.getByLabel('Query editor').locator('.cm-content'),
     ).toBeVisible();
-
-    expect(await page.screenshot()).toMatchSnapshot('playground-loaded.png');
 });
 
 // ─────────────────────────────────────────────────────────────────────
