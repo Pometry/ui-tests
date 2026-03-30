@@ -402,9 +402,6 @@ export async function getGraphState(page: Page): Promise<GraphState> {
             const anyDisabled = data.nodes.some((n) =>
                 n.states?.includes('disabled'),
             );
-            console.log(
-                data.nodes.map((n) => ({ id: n.id, states: n.states })),
-            );
             return {
                 highlighted: anyDisabled
                     ? data.nodes
