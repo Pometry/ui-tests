@@ -857,6 +857,7 @@ test('Comprehensive styling, selection, and highlighting', async ({
     test.setTimeout(60000);
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await fitView(page);
+    await page.waitForTimeout(1000);
 
     // Save individual node styling for Pedro
     await clickOnNode(page, 'Pedro');
