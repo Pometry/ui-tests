@@ -144,6 +144,17 @@ test('Click on Ben node in graph', async ({ page }) => {
     await expect(page.getByText('Age', { exact: true })).toBeVisible();
 });
 
+test('Overflowing elements can be scrolled into view', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        page,
+        'vanilla',
+        'graph_with_metadata',
+    );
+    await expect(page.getByText('Relationships')).not.toBeInViewport();
+    await page.getByText('Relationships').scrollIntoViewIfNeeded();
+    await expect(page.getByText('Relationships')).toBeInViewport();
+});
+
 test('Double click expand node and delete by floating actions button', async ({
     page,
 }) => {
