@@ -36,7 +36,7 @@ async function hoverEdgeAndExpectTooltip(
     const box = await line.boundingBox();
     if (!box) throw new Error(`Element ${selector} is not visible or rendered`);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await expect(page.getByText(expectedText)).toBeVisible();
+    await expect(page.getByText(expectedText)).toBeInViewport({ ratio: 1 });
     await page.mouse.move(0, 0);
 }
 
@@ -48,7 +48,9 @@ test('Close temporal view button and open again', async ({ page }) => {
     await expect(page.locator('text="Ben"')).toBeVisible();
 });
 
-test('Temporal view hover over edges', async ({ page }) => {
+test('Temporal view hover over edges and ensure tooltips in viewport', async ({
+    page,
+}) => {
     await setupGraphPage(page);
 
     await hoverEdgeAndExpectTooltip(
