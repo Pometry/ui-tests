@@ -144,6 +144,13 @@ def random_created_at():
     return int(created.timestamp() * 1000)
 
 
+def setup_graph_with_metadata(graph):
+    setup_graph(graph)
+    for i in range(0, 20):
+        graph.add_metadata({ f"prop{i}": 100 })
+    return graph
+
+
 def setup_large_graph(graph):
     graph.add_node(0, "center")
     for i in range(0, 500):
@@ -192,6 +199,9 @@ def __main__():
     graph = second_filler_graph(PersistentGraph())
     graph.save_to_file(f"{work_dir}/new_folder/persistent_second_filler")
     graph.save_to_file(f"{work_dir}/vanilla/persistent_second_filler")
+
+    graph = setup_graph_with_metadata(Graph())
+    graph.save_to_file(f"{work_dir}/vanilla/graph_with_metadata")
 
     server = graphql.GraphServer(work_dir=work_dir)
     server.run(port=port)
