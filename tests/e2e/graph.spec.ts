@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test } from '../fixtures';
 import {
     changeTab,
@@ -8,6 +8,7 @@ import {
     doubleClickOnNode,
     dragSlider,
     fillInStyling,
+    fitView,
     getGraphState,
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
@@ -15,13 +16,6 @@ import {
     selectLayout,
     waitForLayoutToFinish,
 } from './utils';
-
-async function fitView(page: Page) {
-    await page
-        .getByRole('button', { name: 'Fit all nodes within visible region' })
-        .click();
-    await waitForLayoutToFinish(page);
-}
 
 test('Close right hand side panel button and open again', async ({ page }) => {
     await page.goto('/graph/vanilla/event?initialNodes=%5B%5D');
