@@ -515,6 +515,48 @@ test('Change colour and size of node by type', async ({ settingsPage }) => {
     await expect(state?.nodes.find((n) => n.id === 'Ben')?.size).toEqual(30);
 });
 
+test('Change colour only of individual node', async ({ settingsPage }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        settingsPage,
+        'new_folder',
+        'persistent_filler',
+    );
+    await fitView(settingsPage);
+    await clickOnNode(settingsPage, 'Pedro');
+    await changeTab(settingsPage, 'Styling');
+    await fillInStyling(settingsPage, { colourValue: 'BD10E0' });
+    await settingsPage
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+    await expect(settingsPage.getByText('Styling updated')).toBeVisible({
+        timeout: 5000,
+    });
+    const state = await getGraphState(settingsPage);
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.colour).toEqual(
+        '#bd10e0',
+    );
+});
+
+test('Change size only of individual node', async ({ settingsPage }) => {
+    await navigateToSavedGraphBySavedGraphsTable(
+        settingsPage,
+        'new_folder',
+        'persistent_filler',
+    );
+    await fitView(settingsPage);
+    await clickOnNode(settingsPage, 'Pedro');
+    await changeTab(settingsPage, 'Styling');
+    await fillInStyling(settingsPage, { size: 30 });
+    await settingsPage
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+    await expect(settingsPage.getByText('Styling updated')).toBeVisible({
+        timeout: 5000,
+    });
+    const state = await getGraphState(settingsPage);
+    expect(state.nodes.find((n) => n.id === 'Pedro')?.size).toEqual(30);
+});
+
 test('Preview colour and size by type changes', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(
         page,
