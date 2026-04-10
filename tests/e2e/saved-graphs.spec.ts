@@ -16,10 +16,23 @@ test('Saved graphs table is visible', async ({ page }) => {
     await expect(page.getByText('PROPERTIES')).toBeVisible();
 });
 
-test('Card view has 7 cards per page', async ({ page }) => {
+const SAVED_GRAPHS_EXPECTED_CARDS_PER_PAGE = 8;
+// Currently, this is true. If more graphs are added into vanilla this number
+// needs to change.
+const VANILLA_FOLDER_TOTAL_NUM_GRAPHS = SAVED_GRAPHS_EXPECTED_CARDS_PER_PAGE;
+
+test(`Card view has ${SAVED_GRAPHS_EXPECTED_CARDS_PER_PAGE} cards per page`, async ({
+    page,
+}) => {
     await navigateToSavedGraphsFolder(page, 'vanilla');
-    await expect(page.getByText('1-7 of 7')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'GRAPH' })).toHaveCount(7);
+    await expect(
+        page.getByText(
+            `1-${SAVED_GRAPHS_EXPECTED_CARDS_PER_PAGE} of ${VANILLA_FOLDER_TOTAL_NUM_GRAPHS}`,
+        ),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'GRAPH' })).toHaveCount(
+        SAVED_GRAPHS_EXPECTED_CARDS_PER_PAGE,
+    );
 });
 
 test('Row sorting on saved graphs table by columns', async ({ page }) => {
