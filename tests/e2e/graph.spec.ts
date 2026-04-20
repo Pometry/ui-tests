@@ -1013,7 +1013,9 @@ test.skip('save new graph with save as dialog', async ({ page }) => {
 test('Right-clicking a node shows the context menu', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
     await rightClickOnNode(page, 'Pedro');
-    await expect(page.getByRole('menuitem', { name: 'Expand' })).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Expand', exact: true }),
+    ).toBeVisible();
     await expect(
         page.getByRole('menuitem', { name: 'Expand Two-Hop' }),
     ).toBeVisible();
@@ -1043,7 +1045,6 @@ test('Right-clicking a node shows the context menu', async ({ page }) => {
 
 test('Context menu deselect all clears node selection', async ({ page }) => {
     await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
-    await clickOnNode(page, 'Pedro');
     await rightClickOnNode(page, 'Hamza');
     await page.getByRole('menuitem', { name: 'Deselect all' }).click();
 
