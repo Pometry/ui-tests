@@ -13,6 +13,7 @@ import {
     navigateToGraphPageBySearch,
     navigateToSavedGraphBySavedGraphsTable,
     openTimeline,
+    rightClickOnNode,
     selectLayout,
     waitForLayoutToFinish,
 } from './utils';
@@ -1007,4 +1008,103 @@ test.skip('save new graph with save as dialog', async ({ page }) => {
     await page.waitForURL(/\/graph\/Test%20Graph\?initialNodes=%5B%5D/);
 
     await expect(page.locator('input')).toHaveValue('Test Graph');
+});
+
+test('Right-clicking a node shows the context menu', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await rightClickOnNode(page, 'Pedro');
+    await expect(page.getByRole('menuitem', { name: 'Expand' })).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Expand Two-Hop' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Find Shortest Path' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Shared Neighbours' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Select all similar' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Deselect all' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Invert selection' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Select related' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('menuitem', { name: 'Open Trace Log' }),
+    ).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+});
+
+test('Context menu deselect all clears node selection', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await clickOnNode(page, 'Pedro');
+    await rightClickOnNode(page, 'Hamza');
+    await page.getByRole('menuitem', { name: 'Deselect all' }).click();
+
+    const state = await getGraphState(page);
+    expect(state.selected).toHaveLength(0);
+});
+
+test('Context menu invert selection', async ({ page }) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await rightClickOnNode(page, 'Pedro');
+    await page.getByRole('menuitem', { name: 'Invert selection' }).click();
+
+    const state = await getGraphState(page);
+    expect(state.selected).not.toContain('Pedro');
+    expect(state.selected.length).toEqual(4);
+});
+
+test('Context menu select all similar selects all nodes of the same type', async ({
+    page,
+}) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await rightClickOnNode(page, 'Pedro');
+    await page.getByRole('menuitem', { name: 'Select all similar' }).click();
+
+    const state = await getGraphState(page);
+    expect(state.selected).toContain('Pedro');
+    expect(state.selected).toContain('Hamza');
+    expect(state.selected).toContain('Ben');
+});
+
+test('Context menu delete removes the node from the graph', async ({
+    page,
+}) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await rightClickOnNode(page, 'Pedro');
+    await page.getByRole('menuitem', { name: 'Delete' }).click();
+    await waitForLayoutToFinish(page);
+
+    const state = await getGraphState(page);
+    expect(state.selected).not.toContain('Pedro');
+});
+
+test('Context menu select related selects connected nodes', async ({
+    page,
+}) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await rightClickOnNode(page, 'Pedro');
+    await page.getByRole('menuitem', { name: 'Select related' }).click();
+
+    const state = await getGraphState(page);
+    expect(state.selected).toContain('Hamza');
+    expect(state.selected).toContain('Ben');
+    expect(state.selected).toContain('Pedro');
+});
+
+test('Context menu open trace log opens the drawer on the trace log tab', async ({
+    page,
+}) => {
+    await navigateToSavedGraphBySavedGraphsTable(page, 'vanilla', 'persistent');
+    await rightClickOnNode(page, 'Pedro');
+    await page.getByRole('menuitem', { name: 'Open Trace Log' }).click();
+
+    await expect(page.getByRole('tab', { name: 'Trace Log' })).toBeVisible();
 });

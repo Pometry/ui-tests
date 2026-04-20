@@ -79,6 +79,11 @@ export async function doubleClickOnNode(page: Page, displayName: string) {
     await page.locator('canvas').nth(1).dblclick({ position });
 }
 
+export async function rightClickOnNode(page: Page, displayName: string) {
+    const position = await getNodePosition(page, displayName);
+    await page.locator('canvas').nth(1).click({ position, button: 'right' });
+}
+
 /** Click the first node normally, then Shift-click the rest to multi-select. */
 export async function clickOnNodes(page: Page, displayNames: string[]) {
     if (displayNames.length === 0) return;
